@@ -40,8 +40,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import type { ChatHeaderProps } from '@/types'
+import { useMobileHelper } from '@/helpers/common'
 
 interface Props extends ChatHeaderProps {
     isConnected: boolean
@@ -56,23 +57,7 @@ const props = withDefaults(defineProps<Props>(), {
     isStreaming: false,
 })
 
-const isMoblie = ref(false)
-const MOBILE_BREAKPOINT = 768 // 與您的 CSS @media (max-width: 768px) 保持一致
-
-const checkMobile = () => {
-    isMoblie.value = window.innerWidth <= MOBILE_BREAKPOINT
-}
-
-// 1. 在元件掛載時啟動監聽
-onMounted(() => {
-    checkMobile() // 初始化檢查
-    window.addEventListener('resize', checkMobile)
-})
-
-// 2. 在元件銷毀時移除監聽，避免記憶體洩漏
-onUnmounted(() => {
-    window.removeEventListener('resize', checkMobile)
-})
+const { isMoblie } = useMobileHelper()
 
 const connectionStatusText = computed(() => {
     if (props.isInitializing) return '連線中...'
