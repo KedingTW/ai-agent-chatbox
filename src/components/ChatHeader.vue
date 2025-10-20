@@ -8,11 +8,11 @@
                 class="chatHeaderLogoImg"
             />
         </div>
-        <div class="col-6 col-md-4 chatHeaderTitle">
+        <div class="col-9 col-md-4 chatHeaderTitle">
             <!-- Title -->
             <h2 class="tt">{{ displayTitle }}</h2>
         </div>
-        <div class="col-6 col-md-4 chatHeaderMenu">
+        <div class="col-3 col-md-4 chatHeaderMenu">
             <!-- Status、Menu -->
             <div class="chatStatus">
                 <span :class="getStatusIndicatorClass()" class="statusBox">

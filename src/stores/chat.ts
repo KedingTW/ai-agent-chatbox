@@ -407,7 +407,7 @@ export const useConfigStore = defineStore('config', () => {
         {
             id: 'profile1',
             name: '設定檔1',
-            title: '客戶助理',
+            title: 'Customer Assistant Agent 客戶助理',
             accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
             secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || '',
             bedrockAgentArn: import.meta.env.VITE_AWS_BEDROCK_AGENT_ARN || '',
