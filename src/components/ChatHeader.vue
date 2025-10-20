@@ -1,26 +1,46 @@
 <template>
     <div class="chat-header border-bottom">
-        <div class="chat-header__logo">
-            <img
-                src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
-                alt="Logo"
-                class="chat-header__logo-img"
-            />
-        </div>
-        <div class="chat-header__content">
-            <h2 class="chat-header__title">{{ title }}</h2>
-        </div>
-        <div style="text-align: end">
-            <div class="chat-status d-flex align-items-center small">
-                <span :class="getStatusIndicatorClass()"></span>
-                {{ connectionStatusText }}
+        <template v-if="!isMoblie">
+            <div class="chat-header__logo">
+                <img
+                    src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
+                    alt="Logo"
+                    class="chat-header__logo-img"
+                />
             </div>
-        </div>
+            <div class="chat-header__content">
+                <h2 class="chat-header__title">{{ title }}</h2>
+            </div>
+            <div style="text-align: end">
+                <div class="chat-status d-flex align-items-center small">
+                    <span :class="getStatusIndicatorClass()"></span>
+                    {{ connectionStatusText }}
+                </div>
+            </div>
+        </template>
+        <template v-else>
+            <div class="w-100 chat-header__logo">
+                <img
+                    src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
+                    alt="Logo"
+                    class="chat-header__logo-img"
+                />
+            </div>
+            <div class="w-100 d-flex justify-content-between">
+                <h2 class="chat-header__title">{{ title }}</h2>
+                <div style="text-align: end">
+                    <div class="chat-status d-flex align-items-center small">
+                        <span :class="getStatusIndicatorClass()"></span>
+                        {{ connectionStatusText }}
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { ChatHeaderProps } from '@/types'
 
 interface Props extends ChatHeaderProps {
@@ -34,6 +54,24 @@ const props = withDefaults(defineProps<Props>(), {
     isConnected: false,
     isInitializing: false,
     isStreaming: false,
+})
+
+const isMoblie = ref(false)
+const MOBILE_BREAKPOINT = 768 // 與您的 CSS @media (max-width: 768px) 保持一致
+
+const checkMobile = () => {
+    isMoblie.value = window.innerWidth <= MOBILE_BREAKPOINT
+}
+
+// 1. 在元件掛載時啟動監聽
+onMounted(() => {
+    checkMobile() // 初始化檢查
+    window.addEventListener('resize', checkMobile)
+})
+
+// 2. 在元件銷毀時移除監聽，避免記憶體洩漏
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobile)
 })
 
 const connectionStatusText = computed(() => {
@@ -60,6 +98,13 @@ const getStatusIndicatorClass = () => {
     padding: 5px;
     align-items: center;
     gap: 1rem;
+}
+@media (max-width: 768px) {
+    .chat-header {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
 }
 
 .chat-header__logo {

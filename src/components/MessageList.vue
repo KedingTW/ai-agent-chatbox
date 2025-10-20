@@ -17,7 +17,7 @@
             <div class="empty-state__icon">💬</div>
             <div class="empty-state__title">開始對話吧</div>
             <div class="empty-state__subtitle">
-                您可以詢問任何有關CRM的資訊，例如分析昨日的K大邀約成果
+                隨時詢問客戶資訊，全面掌握決策依據
             </div>
         </div>
 

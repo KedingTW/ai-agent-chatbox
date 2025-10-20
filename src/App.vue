@@ -2,7 +2,7 @@
     <div id="app">
         <div class="app-container">
             <ChatHeader
-                title="CRM AI代理"
+                title="客戶洞察助理"
                 :is-connected="isConnected"
                 :is-initializing="isInitializing"
                 :is-streaming="isStreaming"
