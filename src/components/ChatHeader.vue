@@ -9,7 +9,7 @@
                 />
             </div>
             <div class="chat-header__content">
-                <h2 class="chat-header__title">{{ title }}</h2>
+                <h2 class="chat-header__title">客戶洞察助理</h2>
             </div>
             <div style="text-align: end">
                 <div class="chat-status d-flex align-items-center small">
@@ -27,7 +27,7 @@
                 />
             </div>
             <div class="w-100 d-flex justify-content-between">
-                <h2 class="chat-header__title">{{ title }}</h2>
+                <h2 class="chat-header__title">客戶洞察助理</h2>
                 <div style="text-align: end">
                     <div class="chat-status d-flex align-items-center small">
                         <span :class="getStatusIndicatorClass()"></span>
@@ -41,20 +41,9 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import type { ChatHeaderProps } from '@/types'
+import { useChatStore } from '@/stores/chat'
 
-interface Props extends ChatHeaderProps {
-    isConnected: boolean
-    isInitializing: boolean
-    isStreaming: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    title: 'AI Assistant',
-    isConnected: false,
-    isInitializing: false,
-    isStreaming: false,
-})
+const chatStore = useChatStore()
 
 const isMoblie = ref(false)
 const MOBILE_BREAKPOINT = 768 // 與您的 CSS @media (max-width: 768px) 保持一致
@@ -75,17 +64,17 @@ onUnmounted(() => {
 })
 
 const connectionStatusText = computed(() => {
-    if (props.isInitializing) return '連線中...'
-    if (!props.isConnected) return '已斷線'
-    if (props.isStreaming) return '正在回應中...'
+    if (chatStore.isInitializing) return '連線中...'
+    if (!chatStore.isConnected) return '已斷線'
+    if (chatStore.isStreaming) return '正在回應中...'
     return '已上線'
 })
 
 const getStatusIndicatorClass = () => {
     const baseClass = 'status-indicator'
-    if (props.isInitializing) return `${baseClass} status-indicator--connecting`
-    if (!props.isConnected) return `${baseClass} status-indicator--disconnected`
-    if (props.isStreaming) return `${baseClass} status-indicator--streaming`
+    if (chatStore.isInitializing) return `${baseClass} status-indicator--connecting`
+    if (!chatStore.isConnected) return `${baseClass} status-indicator--disconnected`
+    if (chatStore.isStreaming) return `${baseClass} status-indicator--streaming`
     return `${baseClass} status-indicator--connected`
 }
 </script>

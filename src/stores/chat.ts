@@ -23,6 +23,7 @@ export const useChatStore = defineStore('chat', () => {
     const currentStreamingMessageId = ref<string | null>(null)
     const error = ref<ErrorContext | null>(null)
     const isConnected = ref(false)
+    const isInitializing = ref(true)
 
     // Enhanced state
     const streamingStatus = ref<StreamingStatus>({
@@ -61,7 +62,7 @@ export const useChatStore = defineStore('chat', () => {
     )
 
     const canSendMessage = computed(
-        () => isConnected.value && !isWaitingForResponse.value && !error.value,
+        () => isConnected.value && !isWaitingForResponse.value && !error.value && !isInitializing.value,
     )
 
     // Message management actions
@@ -228,6 +229,7 @@ export const useChatStore = defineStore('chat', () => {
     const setError = (errorContext: ErrorContext | null): void => {
         error.value = errorContext
         if (errorContext) {
+            isStreaming.value = false
             updateStreamingStatus({
                 state: 'error',
                 error: errorContext,
@@ -273,6 +275,11 @@ export const useChatStore = defineStore('chat', () => {
         clearError()
     }
 
+    // Initialization management
+    const setInitializing = (initializing: boolean): void => {
+        isInitializing.value = initializing
+    }
+
     const disconnect = (): void => {
         setConnectionStatus({ isConnected: false })
         stopStreaming()
@@ -308,6 +315,7 @@ export const useChatStore = defineStore('chat', () => {
         clearMessages()
         clearError()
         disconnect()
+        isInitializing.value = true
         updateStreamingStatus({
             state: 'idle',
             messageId: null,
@@ -329,6 +337,7 @@ export const useChatStore = defineStore('chat', () => {
         currentStreamingMessageId,
         error,
         isConnected,
+        isInitializing,
         streamingStatus,
         connectionStatus,
         currentSession,
@@ -366,6 +375,9 @@ export const useChatStore = defineStore('chat', () => {
         setConnectionStatus,
         connect,
         disconnect,
+
+        // Initialization actions
+        setInitializing,
 
         // Session actions
         startNewSession,

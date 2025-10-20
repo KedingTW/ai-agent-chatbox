@@ -1,15 +1,9 @@
 <template>
     <div id="app">
         <div class="app-container">
-            <ChatHeader
-                title="客戶洞察助理"
-                :is-connected="isConnected"
-                :is-initializing="isInitializing"
-                :is-streaming="isStreaming"
-            />
-            <div class="chat-wrapper">
-                <ChatContainer :show-header="false" height="calc(100dvh - 90px)" width="100dvw" />
-            </div>
+            <ChatHeader />
+            <ErrorBanner />
+            <ChatContainer />
             <footer class="app-footer">
                 <div class="copyright">
                     KEDING © 2025 Keding Enterprises Co., Ltd. All rights reserved.
@@ -17,46 +11,20 @@
             </footer>
         </div>
 
-        <GlobalError
-            :error="globalError"
-            @reload="handleReload"
-            @dismiss="handleDismissGlobalError"
-        />
+        <GlobalError :error="globalError" @dismiss="handleDismissGlobalError" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onErrorCaptured } from 'vue'
-import { useChatStore } from '@/stores/chat'
+import { ref, onMounted, onErrorCaptured } from 'vue'
 import ChatContainer from '@/components/ChatContainer.vue'
 import ChatHeader from '@/components/ChatHeader.vue'
 import GlobalError from '@/components/GlobalError.vue'
+import ErrorBanner from '@/components/ErrorBanner.vue'
 import type { ErrorContext } from '@/types'
-
-// Store
-const chatStore = useChatStore()
 
 // Global error state
 const globalError = ref<ErrorContext | null>(null)
-
-// Chat state for header
-const isConnected = computed(() => chatStore.isConnected)
-const isStreaming = computed(() => chatStore.isStreaming)
-const isInitializing = ref(true)
-
-// Copyright year
-const currentYear = new Date().getFullYear()
-
-// Update initializing state when chat store is ready
-const updateInitializingState = () => {
-    isInitializing.value = false
-}
-
-// Listen for chat store initialization
-onMounted(() => {
-    // Set a timeout to update initializing state after a brief moment
-    setTimeout(updateInitializingState, 1000)
-})
 
 // Error handling
 const handleGlobalError = (error: Error, info?: string) => {
@@ -74,10 +42,6 @@ const handleGlobalError = (error: Error, info?: string) => {
 
 const handleDismissGlobalError = () => {
     globalError.value = null
-}
-
-const handleReload = () => {
-    window.location.reload()
 }
 
 // Vue error boundary
@@ -132,13 +96,7 @@ body {
     flex-direction: column;
     height: 100vh;
     width: 100vw;
-}
-
-.chat-wrapper {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 0;
 }
 
 .app-footer {
@@ -158,10 +116,6 @@ body {
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .chat-wrapper {
-        padding: 0 0.5rem;
-    }
-
     .copyright {
         font-size: 0.7rem;
     }
