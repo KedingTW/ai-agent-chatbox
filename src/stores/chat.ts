@@ -66,10 +66,10 @@ export const useChatStore = defineStore('chat', () => {
 
     // Message management actions
     const addMessage = (message: Message): boolean => {
-        // if (!validateMessage(message)) {
-        //     console.error('Invalid message format:', message)
-        //     return false
-        // }
+        if (!validateMessage(message)) {
+            console.error('Invalid message format:', message)
+            return false
+        }
 
         messages.value.push(message)
         currentSession.value.messageCount++

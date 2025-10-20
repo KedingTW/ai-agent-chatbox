@@ -15,6 +15,7 @@ import type {
     SendMessageResponse,
     ConnectionStatus,
     Result,
+    StreamEvent,
 } from '@/types'
 import { isValidAWSConfig, classifyError, assertIsAWSConfig } from '@/types'
 import {
@@ -125,21 +126,6 @@ export class AWSBedrockService {
         } else if (updates.isConnected === false) {
             this.connectionStatus.connectionAttempts++
         }
-    }
-
-    /**
-     * Extract agent ID from ARN format
-     */
-    private extractAgentId(agentArn: string): string {
-        // If it's an ARN, extract the actual agent ID
-        if (agentArn.startsWith('arn:aws:bedrock-agentcore:')) {
-            // ARN format: arn:aws:bedrock-agentcore:region:account:runtime/AgentName-randomId
-            const parts = agentArn.split('/')
-            if (parts.length > 1) {
-                return parts[parts.length - 1] // Get the last part after the final slash
-            }
-        }
-        return agentArn
     }
 
     /**
@@ -263,101 +249,6 @@ export class AWSBedrockService {
     }
 
     /**
-     * Send a message to the AWS Bedrock agent
-     */
-    // async sendMessage(message: string, retryCount: number = 0): Promise<SendMessageResponse> {
-    //     const maxRetries = 3
-    //     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-
-    //     // Basic message validation
-    //     if (!message || !message.trim()) {
-    //         const errorContext: ErrorContext = {
-    //             type: 'validation',
-    //             code: 'INVALID_MESSAGE',
-    //             message: 'Message cannot be empty',
-    //             timestamp: new Date(),
-    //             retryable: false,
-    //         }
-    //         return {
-    //             success: false,
-    //             messageId,
-    //             error: errorContext,
-    //         }
-    //     }
-
-    //     try {
-    //         // Ensure client is ready
-    //         await this.ensureInitialized()
-    //         const client = await this.getClient()
-
-    //         // Create command
-    //         const commandInput = this.createInvokeAgentRuntimeCommand(message)
-    //         const command = new InvokeAgentRuntimeCommand(commandInput)
-
-    //         // Send the message
-    //         const startTime = Date.now()
-    //         const response: InvokeAgentRuntimeCommandOutput = await client.send(command)
-    //         const duration = Date.now() - startTime
-
-    //         // Update connection status with latency
-    //         this.updateConnectionStatus({
-    //             isConnected: true,
-    //             latency: duration,
-    //         })
-
-    //         // Validate response
-    //         if (!response || !response.response) {
-    //             throw new Error('Invalid response from AWS Bedrock Agent')
-    //         }
-
-    //         console.log()
-
-    //         return {
-    //             success: true,
-    //             messageId,
-    //             response:
-    //                 'Message sent successfully - streaming response will be handled separately',
-    //             sessionId: this.config.sessionId,
-    //             duration,
-    //             streamingResponse: await response.response.transformToString(), // Store the actual streaming response
-    //         }
-    //     } catch (error) {
-    //         // Update connection status
-    //         this.updateConnectionStatus({ isConnected: false })
-
-    //         // Determine if error is retryable
-    //         const errorType = classifyError(error)
-    //         const isRetryable = ['network', 'api'].includes(errorType) && retryCount < maxRetries
-
-    //         const errorContext: ErrorContext = {
-    //             type: errorType,
-    //             code: this.getErrorCode(error),
-    //             message: this.getErrorMessage(error),
-    //             details: {
-    //                 retryCount,
-    //                 maxRetries,
-    //                 originalError: error instanceof Error ? error.message : String(error),
-    //             },
-    //             timestamp: new Date(),
-    //             retryable: isRetryable,
-    //         }
-
-    //         // Retry if appropriate
-    //         if (isRetryable) {
-    //             const delay = Math.min(1000 * Math.pow(2, retryCount), 10000) // Exponential backoff
-    //             await new Promise((resolve) => setTimeout(resolve, delay))
-    //             return this.sendMessage(message, retryCount + 1)
-    //         }
-
-    //         return {
-    //             success: false,
-    //             messageId,
-    //             error: errorContext,
-    //         }
-    //     }
-    // }
-
-    /**
      * Send a message and handle streaming response
      */
     async sendMessageWithStreaming(
@@ -411,13 +302,10 @@ export class AWSBedrockService {
                 response.response instanceof ReadableStream ||
                 (response.response && typeof response.response.getReader === 'function')
             ) {
-                console.log('use processReadableStream')
                 await this.processReadableStream(response.response, onChunk, onComplete, onError)
             } else if (response.response.transformToString) {
                 // Fallback to transformToString method
-                console.log('use response.response.transformToString')
                 const textResponse = await response.response.transformToString()
-                console.log('Full response:', textResponse)
                 await this.parseSSEResponse(textResponse, onChunk, onComplete, onError)
             } else {
                 throw new Error('Unsupported response format')
@@ -425,8 +313,6 @@ export class AWSBedrockService {
 
             const duration = Date.now() - startTime
             this.updateConnectionStatus({ latency: duration })
-
-            console.log('sendMessageWithStreaming', response)
 
             return {
                 success: true,
@@ -543,6 +429,12 @@ export class AWSBedrockService {
                         .replace(/\\"/g, '"')
                     onChunk?.(text)
                 }
+                const toolUseMatch = data.match(/'stopReason':\s*'tool_use'/)
+                if (toolUseMatch) {
+                    // 如果是 'tool_use' 停止事件，輸出特定的 markdown 提示
+                    const toolUseMessage = '\n> 資料查詢中...請稍候\n\n'
+                    onChunk?.(toolUseMessage)
+                }
             }
         } catch (error) {
             console.warn('Error processing SSE buffer:', error, eventData.substring(0, 100) + '...')
@@ -599,11 +491,7 @@ export class AWSBedrockService {
                                         onChunk?.(textContent)
                                     }
                                 } catch {
-                                    // If all parsing fails, log for debugging
-                                    console.log(
-                                        'Unparsed event data:',
-                                        eventData.substring(0, 100) + '...',
-                                    )
+                                    // If all parsing fails, silently continue
                                 }
                             }
                         } catch (parseError) {
@@ -631,7 +519,7 @@ export class AWSBedrockService {
     /**
      * Extract text content from parsed event data
      */
-    private extractTextFromEvent(eventData: any): string | null {
+    private extractTextFromEvent(eventData: StreamEvent): string | null {
         // Handle different event types
         if (eventData.event) {
             const event = eventData.event
@@ -664,113 +552,6 @@ export class AWSBedrockService {
         }
 
         return null
-    }
-
-    /**
-     * Process streaming response from AWS Bedrock (legacy method)
-     */
-    private async processStreamingResponse(
-        completionStream: any,
-        onChunk?: (chunk: string) => void,
-        onComplete?: () => void,
-        onError?: (error: ErrorContext) => void,
-    ): Promise<void> {
-        try {
-            let fullContent = ''
-
-            // Check if the response has the expected streaming structure
-            if (!completionStream || typeof completionStream[Symbol.asyncIterator] !== 'function') {
-                throw new Error('Invalid streaming response format')
-            }
-
-            // Process the async iterator
-            for await (const event of completionStream) {
-                try {
-                    const chunk = this.processStreamChunk(event)
-                    if (chunk) {
-                        fullContent += chunk
-                        onChunk?.(chunk)
-                    }
-                } catch (chunkError) {
-                    console.warn('Error processing stream chunk:', chunkError)
-                    // Continue processing other chunks
-                }
-            }
-
-            // Stream completed successfully
-            onComplete?.()
-        } catch (error) {
-            const errorContext: ErrorContext = {
-                type: 'streaming',
-                code: 'STREAM_PROCESSING_ERROR',
-                message: error instanceof Error ? error.message : 'Stream processing failed',
-                timestamp: new Date(),
-                retryable: false,
-            }
-            onError?.(errorContext)
-        }
-    }
-
-    /**
-     * Process individual stream chunk
-     */
-    private processStreamChunk(event: any): string | null {
-        try {
-            // Handle different types of stream events
-            if (event.chunk?.bytes) {
-                // Decode bytes to string
-                const decoder = new TextDecoder('utf-8')
-                const text = decoder.decode(event.chunk.bytes)
-                return text
-            }
-
-            if (event.contentBlockDelta?.delta?.text) {
-                // Handle text delta events
-                return event.contentBlockDelta.delta.text
-            }
-
-            if (event.messageStart) {
-                // Message start event - no content to return
-                return null
-            }
-
-            if (event.messageStop) {
-                // Message stop event - no content to return
-                return null
-            }
-
-            if (event.contentBlockStart) {
-                // Content block start - no content to return
-                return null
-            }
-
-            if (event.contentBlockStop) {
-                // Content block stop - no content to return
-                return null
-            }
-
-            // Handle any other event types that might contain text
-            if (typeof event === 'string') {
-                return event
-            }
-
-            if (event.text) {
-                return event.text
-            }
-
-            if (event.content) {
-                return typeof event.content === 'string'
-                    ? event.content
-                    : JSON.stringify(event.content)
-            }
-
-            // Unknown event type - log for debugging
-            console.debug('Unknown stream event type:', event)
-            return null
-        } catch (error) {
-            console.error('Error processing stream chunk:', error, event)
-            return null
-        }
     }
 
     /**
@@ -832,10 +613,10 @@ export class AWSBedrockService {
     /**
      * Cancel an ongoing request (placeholder for future implementation)
      */
-    async cancelRequest(messageId: string): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async cancelRequest(_messageId: string): Promise<boolean> {
         // This would be implemented to cancel ongoing requests
         // For now, it's a placeholder
-        console.log(`Cancel request for message ${messageId} - not implemented yet`)
         return false
     }
 }

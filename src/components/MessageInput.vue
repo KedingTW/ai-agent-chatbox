@@ -2,26 +2,44 @@
     <div :class="containerClasses">
         <form @submit.prevent="handleSubmit" class="message-input-form">
             <!-- Input field -->
-            <div :class="inputGroupClasses">
-                <textarea ref="textareaRef" v-model="inputValue" :class="textareaClasses" :placeholder="placeholder"
-                    :disabled="disabled" rows="3" @keydown="handleKeyDown" @focus="handleFocus" @blur="handleBlur"
-                    @compositionstart="handleCompositionStart" @compositionend="handleCompositionEnd"
-                    aria-label="Type your message" />
+            <div class="input-group message-input__group">
+                <textarea
+                    ref="textareaRef"
+                    v-model="inputValue"
+                    :class="textareaClasses"
+                    :placeholder="placeholder"
+                    :disabled="disabled"
+                    rows="3"
+                    @keydown="handleKeyDown"
+                    @focus="handleFocus"
+                    @blur="handleBlur"
+                    @compositionstart="handleCompositionStart"
+                    @compositionend="handleCompositionEnd"
+                    aria-label="Type your message"
+                />
 
                 <!-- Send button -->
-                <button :class="sendButtonClasses" type="submit" :disabled="!canSend" :aria-label="sendButtonLabel">
+                <button
+                    :class="sendButtonClasses"
+                    type="submit"
+                    :disabled="!canSend"
+                    :aria-label="sendButtonLabel"
+                >
                     <span v-if="disabled" class="spinner-border spinner-border-sm"></span>
                     <span v-else>{{ sendButtonText }}</span>
                 </button>
             </div>
 
             <!-- Error message -->
-            <div v-if="errorMessage" class="error-message text-danger mt-2" role="alert" aria-live="assertive">
+            <div
+                v-if="errorMessage"
+                class="error-message text-danger mt-2"
+                role="alert"
+                aria-live="assertive"
+            >
                 {{ errorMessage }}
             </div>
         </form>
-
-
     </div>
 </template>
 
@@ -58,12 +76,11 @@ const isComposing = ref(false)
 
 // Computed properties
 const characterCount = computed(() => inputValue.value.length)
-const characterCountNearLimit = computed(() => characterCount.value > props.maxLength * 0.8)
-const characterCountAtLimit = computed(() => characterCount.value >= props.maxLength)
 
 const trimmedValue = computed(() => inputValue.value.trim())
 const canSend = computed(() => {
-    const result = !props.disabled &&
+    const result =
+        !props.disabled &&
         trimmedValue.value.length > 0 &&
         characterCount.value <= (props.maxLength || 4000) &&
         !errorMessage.value
@@ -89,12 +106,7 @@ const containerClasses = computed(() => [
         'message-input--disabled': props.disabled,
         'message-input--focused': isFocused.value,
         'message-input--error': !!errorMessage.value,
-    }
-])
-
-const inputGroupClasses = computed(() => [
-    'input-group',
-    'message-input__group',
+    },
 ])
 
 const textareaClasses = computed(() => [
@@ -104,7 +116,7 @@ const textareaClasses = computed(() => [
         'is-invalid': !!errorMessage.value,
         'message-input__textarea--multiline': props.multiline,
         'message-input__textarea--single': !props.multiline,
-    }
+    },
 ])
 
 const sendButtonClasses = computed(() => [
@@ -113,7 +125,7 @@ const sendButtonClasses = computed(() => [
     {
         'btn-primary': canSend.value,
         'btn-outline-secondary': !canSend.value,
-    }
+    },
 ])
 
 // Methods
@@ -206,11 +218,14 @@ const focusInput = () => {
 }
 
 // Watch for external disabled state changes
-watch(() => props.disabled, (disabled) => {
-    if (disabled) {
-        setTyping(false)
-    }
-})
+watch(
+    () => props.disabled,
+    (disabled) => {
+        if (disabled) {
+            setTyping(false)
+        }
+    },
+)
 
 // Expose methods for parent components
 defineExpose({

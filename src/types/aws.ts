@@ -25,11 +25,6 @@ export interface ChatState {
     isConnected: boolean
 }
 
-export interface StreamingChunk {
-    content: string
-    isComplete: boolean
-}
-
 export interface AWSError {
     code: string
     message: string
@@ -38,35 +33,36 @@ export interface AWSError {
 
 export type MessageSender = 'user' | 'agent'
 
-export interface BedrockStreamEvent {
+// Streaming event types
+export interface StreamEvent {
+    event?: {
+        contentBlockDelta?: {
+            delta?: {
+                text?: string
+            }
+        }
+        chunk?: {
+            bytes?: Uint8Array
+        }
+        messageStart?: boolean
+        messageStop?: boolean
+        contentBlockStart?: boolean
+        contentBlockStop?: boolean
+    }
+    contentBlockDelta?: {
+        delta?: {
+            text?: string
+        }
+    }
     chunk?: {
         bytes?: Uint8Array
     }
-    messageStart?: {
-        role: string
-    }
-    messageStop?: {
-        stopReason: string
-    }
-    contentBlockStart?: {
-        start: {
-            toolUse?: {
-                toolUseId: string
-                name: string
-            }
-        }
-    }
-    contentBlockDelta?: {
-        delta: {
-            text?: string
-            toolUse?: {
-                input: string
-            }
-        }
-    }
-    contentBlockStop?: {
-        contentBlockIndex: number
-    }
+    messageStart?: boolean
+    messageStop?: boolean
+    contentBlockStart?: boolean
+    contentBlockStop?: boolean
+    text?: string
+    content?: string | unknown
 }
 
 // Streaming state types
@@ -97,16 +93,6 @@ export interface ErrorContext {
     retryable: boolean
 }
 
-// Message utility types
-export interface MessageMetadata {
-    id: string
-    timestamp: Date
-    sender: MessageSender
-    sessionId: string
-    retryCount?: number
-    streamingDuration?: number
-}
-
 export interface UserMessage extends Message {
     sender: 'user'
     isStreaming: false
@@ -129,13 +115,6 @@ export interface ChatSession {
     isActive: boolean
 }
 
-// Configuration validation types
-export interface ConfigValidation {
-    isValid: boolean
-    errors: string[]
-    warnings: string[]
-}
-
 // API response types
 export interface SendMessageResponse {
     success: boolean
@@ -144,29 +123,7 @@ export interface SendMessageResponse {
     response?: string
     sessionId?: string
     duration?: number
-    streamingResponse?: any // Will be properly typed in task 4.3
-}
-
-export interface StreamResponse {
-    messageId: string
-    content: string
-    isComplete: boolean
-    error?: AWSError
-}
-
-// Utility type guards
-export type MessageType = UserMessage | AgentMessage
-
-// Event types for component communication
-export interface ChatEvent {
-    type:
-        | 'message-sent'
-        | 'message-received'
-        | 'streaming-started'
-        | 'streaming-ended'
-        | 'error-occurred'
-    payload: unknown
-    timestamp: Date
+    streamingResponse?: ReadableStream | unknown
 }
 
 // Connection status

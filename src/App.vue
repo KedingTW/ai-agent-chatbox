@@ -1,36 +1,62 @@
 <template>
     <div id="app">
         <div class="app-container">
+            <ChatHeader
+                title="客戶洞察助理"
+                :is-connected="isConnected"
+                :is-initializing="isInitializing"
+                :is-streaming="isStreaming"
+            />
             <div class="chat-wrapper">
-                <ChatContainer title="CRM AI代理" :show-header="true" height="100dvh" width="100dvw" />
+                <ChatContainer :show-header="false" height="calc(100dvh - 90px)" width="100dvw" />
             </div>
+            <footer class="app-footer">
+                <div class="copyright">
+                    KEDING © 2025 Keding Enterprises Co., Ltd. All rights reserved.
+                </div>
+            </footer>
         </div>
 
-        <div v-if="globalError" class="global-error-overlay" role="alert" aria-live="assertive">
-            <div class="global-error-content">
-                <div class="global-error-icon">⚠️</div>
-                <h2 class="global-error-title">Application Error</h2>
-                <p class="global-error-message">{{ globalError.message }}</p>
-                <div class="global-error-actions">
-                    <button class="btn btn-primary" @click="handleReload" type="button">
-                        Reload Application
-                    </button>
-                    <button class="btn btn-outline-secondary ms-2" @click="handleDismissGlobalError" type="button">
-                        Dismiss
-                    </button>
-                </div>
-            </div>
-        </div>
+        <GlobalError
+            :error="globalError"
+            @reload="handleReload"
+            @dismiss="handleDismissGlobalError"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onErrorCaptured } from 'vue'
+import { ref, computed, onMounted, onErrorCaptured } from 'vue'
+import { useChatStore } from '@/stores/chat'
 import ChatContainer from '@/components/ChatContainer.vue'
+import ChatHeader from '@/components/ChatHeader.vue'
+import GlobalError from '@/components/GlobalError.vue'
 import type { ErrorContext } from '@/types'
+
+// Store
+const chatStore = useChatStore()
 
 // Global error state
 const globalError = ref<ErrorContext | null>(null)
+
+// Chat state for header
+const isConnected = computed(() => chatStore.isConnected)
+const isStreaming = computed(() => chatStore.isStreaming)
+const isInitializing = ref(true)
+
+// Copyright year
+const currentYear = new Date().getFullYear()
+
+// Update initializing state when chat store is ready
+const updateInitializingState = () => {
+    isInitializing.value = false
+}
+
+// Listen for chat store initialization
+onMounted(() => {
+    // Set a timeout to update initializing state after a brief moment
+    setTimeout(updateInitializingState, 1000)
+})
 
 // Error handling
 const handleGlobalError = (error: Error, info?: string) => {
@@ -109,60 +135,25 @@ body {
 }
 
 .chat-wrapper {
-    height: 100%;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Global error overlay */
-.global-error-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.8);
+.app-footer {
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
-    backdrop-filter: blur(4px);
+    background-color: var(--cui-gray-100);
+    border-top: 1px solid var(--cui-gray-200);
 }
 
-.global-error-content {
-    background-color: white;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
+.copyright {
+    font-size: 0.75rem;
+    color: var(--cui-gray-600);
     text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-}
-
-.global-error-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.global-error-title {
-    color: var(--cui-danger);
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.global-error-message {
-    color: var(--cui-gray-700);
-    margin-bottom: 1.5rem;
-    line-height: 1.5;
-}
-
-.global-error-actions {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
 }
 
 /* Responsive design */
@@ -171,44 +162,8 @@ body {
         padding: 0 0.5rem;
     }
 
-    .global-error-content {
-        padding: 1.5rem;
-        margin: 1rem;
-    }
-
-    .global-error-actions {
-        flex-direction: column;
-    }
-
-    .global-error-actions .btn {
-        width: 100%;
-        margin: 0 !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    .global-error-actions .btn:last-child {
-        margin-bottom: 0 !important;
-    }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-    .global-error-content {
-        border: 2px solid var(--cui-gray-800);
-    }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    .global-error-overlay {
-        backdrop-filter: none;
-    }
-}
-
-/* Print styles */
-@media print {
-    .global-error-overlay {
-        display: none;
+    .copyright {
+        font-size: 0.7rem;
     }
 }
 </style>

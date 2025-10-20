@@ -1,5 +1,9 @@
 <template>
-    <div :class="messageClasses" :aria-label="`Message from ${message.sender} at ${formattedTimestamp}`" role="article">
+    <div
+        :class="messageClasses"
+        :aria-label="`Message from ${message.sender} at ${formattedTimestamp}`"
+        role="article"
+    >
         <div :class="avatarClasses">
             <div :class="avatarIconClasses">
                 {{ message.sender === 'user' ? '👤' : '🤖' }}
@@ -15,12 +19,19 @@
 
                 <!-- Agent messages: markdown rendering -->
                 <div v-else :class="textClasses">
-                    <VMarkdownView :content="message.content" :mode="markdownMode" class="markdown-content" />
+                    <VMarkdownView
+                        :content="message.content"
+                        :mode="markdownMode"
+                        class="markdown-content"
+                    />
                 </div>
 
                 <!-- Streaming indicator -->
-                <div v-if="isStreaming && message.isStreaming" :class="streamingIndicatorClasses"
-                    aria-label="Message is being generated">
+                <div
+                    v-if="isStreaming && message.isStreaming"
+                    :class="streamingIndicatorClasses"
+                    aria-label="Message is being generated"
+                >
                     <span class="streaming-dot"></span>
                     <span class="streaming-dot"></span>
                     <span class="streaming-dot"></span>
@@ -33,8 +44,13 @@
             </div>
 
             <!-- Retry button for failed messages -->
-            <button v-if="showRetryButton" :class="retryButtonClasses" @click="handleRetry"
-                :aria-label="`Retry sending message: ${message.content}`" type="button">
+            <button
+                v-if="showRetryButton"
+                class="message-retry-button btn btn-sm btn-outline-secondary"
+                @click="handleRetry"
+                :aria-label="`Retry sending message: ${message.content}`"
+                type="button"
+            >
                 🔄 Retry
             </button>
         </div>
@@ -72,9 +88,7 @@ const fullTimestamp = computed(() => {
     return date.toLocaleString()
 })
 
-const showRetryButton = computed(() =>
-    isMessageFailed.value && isUserMessage.value
-)
+const showRetryButton = computed(() => isMessageFailed.value && isUserMessage.value)
 
 // Markdown configuration for AI responses
 const markdownMode = computed(() => 'light' as const)
@@ -87,7 +101,7 @@ const messageClasses = computed(() => [
         'message-item--agent': isAgentMessage.value,
         'message-item--streaming': props.isStreaming && props.message.isStreaming,
         'message-item--failed': isMessageFailed.value,
-    }
+    },
 ])
 
 const avatarClasses = computed(() => [
@@ -95,7 +109,7 @@ const avatarClasses = computed(() => [
     {
         'message-avatar--user': isUserMessage.value,
         'message-avatar--agent': isAgentMessage.value,
-    }
+    },
 ])
 
 const avatarIconClasses = computed(() => [
@@ -103,7 +117,7 @@ const avatarIconClasses = computed(() => [
     {
         'message-avatar__icon--user': isUserMessage.value,
         'message-avatar__icon--agent': isAgentMessage.value,
-    }
+    },
 ])
 
 const contentClasses = computed(() => [
@@ -111,7 +125,7 @@ const contentClasses = computed(() => [
     {
         'message-content--user': isUserMessage.value,
         'message-content--agent': isAgentMessage.value,
-    }
+    },
 ])
 
 const bubbleClasses = computed(() => [
@@ -121,7 +135,7 @@ const bubbleClasses = computed(() => [
         'message-bubble--agent': isAgentMessage.value,
         'message-bubble--streaming': props.isStreaming && props.message.isStreaming,
         'message-bubble--failed': isMessageFailed.value,
-    }
+    },
 ])
 
 const textClasses = computed(() => [
@@ -129,7 +143,7 @@ const textClasses = computed(() => [
     {
         'message-text--user': isUserMessage.value,
         'message-text--agent': isAgentMessage.value,
-    }
+    },
 ])
 
 const timestampClasses = computed(() => [
@@ -137,21 +151,14 @@ const timestampClasses = computed(() => [
     {
         'message-timestamp--user': isUserMessage.value,
         'message-timestamp--agent': isAgentMessage.value,
-    }
+    },
 ])
 
 const streamingIndicatorClasses = computed(() => [
     'streaming-indicator',
     {
         'streaming-indicator--visible': props.isStreaming && props.message.isStreaming,
-    }
-])
-
-const retryButtonClasses = computed(() => [
-    'message-retry-button',
-    'btn',
-    'btn-sm',
-    'btn-outline-secondary',
+    },
 ])
 
 // Event handlers
@@ -247,7 +254,7 @@ const handleRetry = () => {
 }
 
 .message-bubble--agent {
-    background-color: #FFF;
+    background-color: #fff;
     color: var(--cui-gray-800);
     border-bottom-left-radius: 0.25rem;
     border: 1px solid var(--cui-gray-200);
@@ -341,7 +348,6 @@ const handleRetry = () => {
 }
 
 @keyframes streamingPulse {
-
     0%,
     80%,
     100% {

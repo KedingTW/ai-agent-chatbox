@@ -44,7 +44,11 @@ export function getAWSCredentialsConfig() {
 
     // If we have explicit credentials, use them
     if (accessKeyId && secretAccessKey) {
-        const credentials: any = {
+        const credentials: {
+            accessKeyId: string
+            secretAccessKey: string
+            sessionToken?: string
+        } = {
             accessKeyId,
             secretAccessKey,
         }
