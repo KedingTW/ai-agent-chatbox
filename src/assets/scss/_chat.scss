@@ -18,14 +18,14 @@
         object-fit: contain;
     }
 }
-.chatHeaderMenu{
+.chatHeaderMenu {
     display: flex;
     justify-content: end;
     @media (max-width: 768px) {
         padding: 0;
     }
     // 切換按紐
-    .changeMenu{
+    .changeMenu {
         color: #fff !important;
         display: flex;
         padding: 10px;
@@ -39,7 +39,7 @@
         color: white;
         gap: 0.5rem;
         align-items: center;
-        .statusBox{
+        .statusBox {
             padding: 2px 10px;
             border-radius: 10px;
         }

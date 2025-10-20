@@ -16,9 +16,7 @@
         >
             <div class="empty-state__icon">💬</div>
             <div class="empty-state__title">開始對話吧</div>
-            <div class="empty-state__subtitle">
-                隨時詢問客戶資訊，全面掌握決策依據
-            </div>
+            <div class="empty-state__subtitle">隨時詢問客戶資訊，全面掌握決策依據</div>
         </div>
 
         <!-- Message list -->
