@@ -19,7 +19,8 @@
                     {{ connectionStatusText }}
                 </span>
             </div>
-            <CDropdown variant="nav-item" dark>
+            <!-- 因功能還沒好先註解 -->
+            <!-- <CDropdown variant="nav-item" dark>
                 <CDropdownToggle :caret="false" class="changeMenu"
                     ><i class="bi bi-list"></i
                 ></CDropdownToggle>
@@ -37,7 +38,7 @@
                         </a>
                     </li>
                 </CDropdownMenu>
-            </CDropdown>
+            </CDropdown> -->
         </div>
     </div>
 </template>
