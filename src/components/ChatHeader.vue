@@ -45,8 +45,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ChatHeaderProps } from '@/types'
-import { useConfigStore } from '@/stores/config'
-import { useChatStore } from '@/stores/chat'
+import { useChatStore, useConfigStore } from '@/stores/chat'
 // import { awsServiceManager } from '@/services/aws-service-manager'
 
 interface Props extends ChatHeaderProps {

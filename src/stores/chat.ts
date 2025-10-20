@@ -375,3 +375,72 @@ export const useChatStore = defineStore('chat', () => {
         resetState,
     }
 })
+
+export interface AWSProfile {
+    id: string
+    name: string
+    title: string
+    accessKeyId: string
+    secretAccessKey: string
+    bedrockAgentArn: string
+    sessionId: string
+}
+
+export const useConfigStore = defineStore('config', () => {
+    // Current active profile
+    const activeProfileId = ref<string>('profile1')
+
+    // Available profiles configuration
+    const profiles = computed<AWSProfile[]>(() => [
+        {
+            id: 'profile1',
+            name: '設定檔1',
+            title: '客戶助理',
+            accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
+            secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || '',
+            bedrockAgentArn: import.meta.env.VITE_AWS_BEDROCK_AGENT_ARN || '',
+            sessionId: import.meta.env.VITE_AWS_BEDROCK_SESSION_ID || '',
+        },
+        {
+            id: 'profile2',
+            name: '設定檔2',
+            title: 'HRS助理',
+            accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID_B || '',
+            secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY_B || '',
+            bedrockAgentArn: import.meta.env.VITE_AWS_BEDROCK_AGENT_ARN_B || '',
+            sessionId: import.meta.env.VITE_AWS_BEDROCK_SESSION_ID_B || '',
+        },
+    ])
+
+    // Current active profile
+    const activeProfile = computed(
+        () =>
+            profiles.value.find((profile) => profile.id === activeProfileId.value) ||
+            profiles.value[0],
+    )
+
+    // Actions
+    const switchProfile = (profileId: string): boolean => {
+        const profile = profiles.value.find((p) => p.id === profileId)
+        if (profile) {
+            activeProfileId.value = profileId
+            return true
+        }
+        return false
+    }
+
+    const getProfileById = (profileId: string): AWSProfile | undefined => {
+        return profiles.value.find((profile) => profile.id === profileId)
+    }
+
+    return {
+        // State
+        activeProfileId,
+        profiles,
+        activeProfile,
+
+        // Actions
+        switchProfile,
+        getProfileById,
+    }
+})
