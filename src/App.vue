@@ -2,7 +2,6 @@
     <div id="app">
         <div class="app-container">
             <ChatHeader
-                title="客戶洞察助理"
                 :is-connected="isConnected"
                 :is-initializing="isInitializing"
                 :is-streaming="isStreaming"
@@ -44,8 +43,8 @@ const isConnected = computed(() => chatStore.isConnected)
 const isStreaming = computed(() => chatStore.isStreaming)
 const isInitializing = ref(true)
 
-// Copyright year
-const currentYear = new Date().getFullYear()
+// Copyright year (for future use)
+// const currentYear = new Date().getFullYear()
 
 // Update initializing state when chat store is ready
 const updateInitializingState = () => {
