@@ -1,41 +1,82 @@
 <template>
-    <div class="chat-header border-bottom">
-        <template v-if="!isMoblie">
-            <div class="chat-header__logo">
+    <div class="row chatHeader">
+        <div class="col-12 col-md-4 chatHeaderLogo">
+            <!-- Logo -->
+            <img
+                src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
+                alt="Logo"
+                class="chatHeaderLogoImg"
+            />
+        </div>
+        <div class="col-6 col-md-4 chatHeaderTitle">
+            <!-- Title -->
+            <h2 class="tt">{{ title }}</h2>
+        </div>
+        <div class="col-6 col-md-4 chatHeaderMenu">
+            <!-- Status、Menu -->
+            <div class="chatStatus">
+                <span :class="getStatusIndicatorClass()" class="statusBox">
+                    {{ connectionStatusText }}
+                </span>
+            </div>
+            <CDropdown variant="nav-item" dark>
+                <CDropdownToggle :caret="false" class="changeMenu"><i class="bi bi-list"></i></CDropdownToggle>
+                <CDropdownMenu>
+                    <CDropdownItem href="#">設定檔1</CDropdownItem>
+                    <CDropdownItem href="#">設定檔2</CDropdownItem>
+                </CDropdownMenu>
+            </CDropdown>
+        </div>
+        <!-- <template v-if="!isMoblie">
+            <div class="chatHeaderLogo">
                 <img
                     src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
                     alt="Logo"
-                    class="chat-header__logo-img"
+                    class="chatHeaderLogoImg"
                 />
             </div>
-            <div class="chat-header__content">
-                <h2 class="chat-header__title">{{ title }}</h2>
+            <div class="chatHeaderContent">
+                <h2 class="chatHeaderTitle">{{ title }}</h2>
             </div>
-            <div style="text-align: end">
-                <div class="chat-status d-flex align-items-center small">
+            <div class="d-flex justify-content-end">
+                <div class="chatStatus d-flex align-items-center small">
                     <span :class="getStatusIndicatorClass()"></span>
                     {{ connectionStatusText }}
                 </div>
+                <CDropdown variant="nav-item" dark>
+                    <CDropdownToggle :caret="false" class="changeMenu"><i class="bi bi-list"></i></CDropdownToggle>
+                    <CDropdownMenu>
+                        <CDropdownItem href="#">設定檔1</CDropdownItem>
+                        <CDropdownItem href="#">設定檔2</CDropdownItem>
+                    </CDropdownMenu>
+                </CDropdown>
             </div>
         </template>
         <template v-else>
-            <div class="w-100 chat-header__logo">
+            <div class="w-100 chatHeaderLogo">
                 <img
                     src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
                     alt="Logo"
-                    class="chat-header__logo-img"
+                    class="chatHeaderLogoImg"
                 />
             </div>
-            <div class="w-100 d-flex justify-content-between">
-                <h2 class="chat-header__title">{{ title }}</h2>
-                <div style="text-align: end">
-                    <div class="chat-status d-flex align-items-center small">
+            <div class="w-100 d-flex justify-content-between align-items-center">
+                <h2 class="chatHeaderTitle">{{ title }}</h2>
+                <div class="d-flex justify-content-end">
+                    <div class="chatStatus d-flex align-items-center small">
                         <span :class="getStatusIndicatorClass()"></span>
                         {{ connectionStatusText }}
                     </div>
+                    <CDropdown variant="nav-item" dark>
+                        <CDropdownToggle :caret="false" class="changeMenu"><i class="bi bi-list"></i></CDropdownToggle>
+                        <CDropdownMenu>
+                            <CDropdownItem href="#">設定檔1</CDropdownItem>
+                            <CDropdownItem href="#">設定檔2</CDropdownItem>
+                        </CDropdownMenu>
+                    </CDropdown>
                 </div>
             </div>
-        </template>
+        </template> -->
     </div>
 </template>
 
@@ -67,125 +108,10 @@ const connectionStatusText = computed(() => {
 })
 
 const getStatusIndicatorClass = () => {
-    const baseClass = 'status-indicator'
-    if (props.isInitializing) return `${baseClass} status-indicator--connecting`
-    if (!props.isConnected) return `${baseClass} status-indicator--disconnected`
-    if (props.isStreaming) return `${baseClass} status-indicator--streaming`
-    return `${baseClass} status-indicator--connected`
+    const baseClass = 'statusBox'
+    if (props.isInitializing) return `${baseClass} statusBoxConnecting`
+    if (!props.isConnected) return `${baseClass} statusBoxDisconnected`
+    if (props.isStreaming) return `${baseClass} statusBoxStreaming`
+    return `${baseClass} statusBoxConnected`
 }
 </script>
-
-<style scoped>
-.chat-header {
-    background-color: #3d4a5d;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    padding: 5px;
-    align-items: center;
-    gap: 1rem;
-}
-@media (max-width: 768px) {
-    .chat-header {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-}
-
-.chat-header__logo {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-.chat-header__logo-img {
-    height: 40px;
-    width: auto;
-    object-fit: contain;
-}
-
-.chat-header__content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.chat-header__title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: white;
-}
-
-.chat-status {
-    color: white;
-    gap: 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    justify-content: flex-end;
-}
-
-.status-indicator {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.status-indicator--connected {
-    background-color: var(--cui-success);
-}
-
-.status-indicator--disconnected {
-    background-color: var(--cui-danger);
-}
-
-.status-indicator--connecting {
-    background-color: var(--cui-warning);
-    animation: pulse 1.5s infinite;
-}
-
-.status-indicator--streaming {
-    background-color: var(--cui-info);
-    animation: pulse 1s infinite;
-}
-
-/* Animations */
-@keyframes pulse {
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .chat-header {
-        padding: 0.75rem;
-    }
-
-    .chat-header__logo-img {
-        height: 32px;
-    }
-
-    .chat-header__title {
-        font-size: 1rem;
-    }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    .status-indicator--connecting,
-    .status-indicator--streaming {
-        animation: none;
-    }
-}
-</style>
