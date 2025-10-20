@@ -32,36 +32,25 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { ChatHeaderProps } from '@/types'
 import { useMobileHelper } from '@/helpers/common'
+import { useChatStore } from '@/stores/chat'
 
-interface Props extends ChatHeaderProps {
-    isConnected: boolean
-    isInitializing: boolean
-    isStreaming: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    title: 'AI Assistant',
-    isConnected: false,
-    isInitializing: false,
-    isStreaming: false,
-})
+const chatStore = useChatStore()
 
 const { isMoblie } = useMobileHelper()
 
 const connectionStatusText = computed(() => {
-    if (props.isInitializing) return '連線中...'
-    if (!props.isConnected) return '已斷線'
-    if (props.isStreaming) return '正在回應中...'
+    if (chatStore.isInitializing) return '連線中...'
+    if (!chatStore.isConnected) return '已斷線'
+    if (chatStore.isStreaming) return '正在回應中...'
     return '已上線'
 })
 
 const getStatusIndicatorClass = () => {
     const baseClass = 'statusBox'
-    if (props.isInitializing) return `${baseClass} statusBoxConnecting`
-    if (!props.isConnected) return `${baseClass} statusBoxDisconnected`
-    if (props.isStreaming) return `${baseClass} statusBoxStreaming`
+    if (chatStore.isInitializing) return `${baseClass} statusBoxConnecting`
+    if (!chatStore.isConnected) return `${baseClass} statusBoxDisconnected`
+    if (chatStore.isStreaming) return `${baseClass} statusBoxStreaming`
     return `${baseClass} statusBoxConnected`
 }
 </script>

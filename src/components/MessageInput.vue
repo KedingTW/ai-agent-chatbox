@@ -46,11 +46,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { MessageInputProps } from '@/types'
+import { useChatStore } from '@/stores/chat'
 
 // Props
 const props = withDefaults(defineProps<MessageInputProps>(), {
-    disabled: false,
-    placeholder: 'Type your message...',
     maxLength: 4000,
     multiline: true,
 })
@@ -62,6 +61,8 @@ const emit = defineEmits<{
     focus: []
     blur: []
 }>()
+
+const chatStore = useChatStore()
 
 // Refs
 const textareaRef = ref<HTMLTextAreaElement>()
@@ -80,7 +81,7 @@ const characterCount = computed(() => inputValue.value.length)
 const trimmedValue = computed(() => inputValue.value.trim())
 const canSend = computed(() => {
     const result =
-        !props.disabled &&
+        chatStore.canSendMessage &&
         trimmedValue.value.length > 0 &&
         characterCount.value <= (props.maxLength || 4000) &&
         !errorMessage.value
@@ -89,12 +90,19 @@ const canSend = computed(() => {
 })
 
 const sendButtonText = computed(() => {
-    if (props.disabled) return ''
+    if (!chatStore.canSendMessage) return ''
     return '📤'
 })
 
+const placeholder = computed(() => {
+    if (chatStore.isInitializing) return '連線中...'
+    if (!chatStore.isConnected) return '已斷線'
+    if (chatStore.isStreaming) return '正在回應中...'
+    return '請說明你的問題...'
+})
+
 const sendButtonLabel = computed(() => {
-    if (props.disabled) return 'Sending message...'
+    if (!chatStore.canSendMessage) return 'Sending message...'
     if (!canSend.value) return 'Cannot send message'
     return 'Send message'
 })
@@ -103,7 +111,7 @@ const sendButtonLabel = computed(() => {
 const containerClasses = computed(() => [
     'message-input',
     {
-        'message-input--disabled': props.disabled,
+        'message-input--disabled': !chatStore.canSendMessage,
         'message-input--focused': isFocused.value,
         'message-input--error': !!errorMessage.value,
     },
@@ -219,7 +227,7 @@ const focusInput = () => {
 
 // Watch for external disabled state changes
 watch(
-    () => props.disabled,
+    () => chatStore.canSendMessage,
     (disabled) => {
         if (disabled) {
             setTyping(false)

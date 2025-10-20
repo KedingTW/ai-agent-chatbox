@@ -5,7 +5,7 @@
             <h2 class="global-error-title">Application Error</h2>
             <p class="global-error-message">{{ error.message }}</p>
             <div class="global-error-actions">
-                <button class="btn btn-primary" @click="$emit('reload')" type="button">
+                <button class="btn btn-primary" @click="handleReload" type="button">
                     Reload Application
                 </button>
                 <button
@@ -30,9 +30,12 @@ interface Props {
 defineProps<Props>()
 
 defineEmits<{
-    reload: []
     dismiss: []
 }>()
+
+const handleReload = () => {
+    window.location.reload()
+}
 </script>
 
 <style scoped>
@@ -47,7 +50,6 @@ defineEmits<{
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    backdrop-filter: blur(4px);
 }
 
 .global-error-content {
@@ -111,13 +113,6 @@ defineEmits<{
 @media (prefers-contrast: high) {
     .global-error-content {
         border: 2px solid var(--cui-gray-800);
-    }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    .global-error-overlay {
-        backdrop-filter: none;
     }
 }
 

@@ -2,7 +2,6 @@
     <div
         ref="containerRef"
         :class="containerClasses"
-        :style="containerStyles"
         role="log"
         aria-live="polite"
         aria-label="Chat conversation"
@@ -16,9 +15,7 @@
         >
             <div class="empty-state__icon">💬</div>
             <div class="empty-state__title">開始對話吧</div>
-            <div class="empty-state__subtitle">
-                隨時詢問客戶資訊，全面掌握決策依據
-            </div>
+            <div class="empty-state__subtitle">隨時詢問客戶資訊，全面掌握決策依據</div>
         </div>
 
         <!-- Message list -->
@@ -62,7 +59,6 @@ import MessageItem from './MessageItem.vue'
 const props = withDefaults(defineProps<MessageListProps>(), {
     isStreaming: false,
     autoScroll: true,
-    maxHeight: '400px',
 })
 
 // Emits
@@ -89,10 +85,6 @@ const containerClasses = computed(() => [
         'message-list--streaming': props.isStreaming,
     },
 ])
-
-const containerStyles = computed(() => ({
-    maxHeight: props.maxHeight,
-}))
 
 // Methods
 const scrollToBottom = async (smooth: boolean = true) => {
@@ -209,8 +201,6 @@ defineExpose({
     flex-direction: column;
     height: 100%;
     background-color: var(--cui-gray-50);
-    border: 1px solid var(--cui-gray-200);
-    border-radius: 0.5rem;
     overflow: hidden;
     position: relative;
 }

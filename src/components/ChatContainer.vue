@@ -1,47 +1,12 @@
 <template>
-    <div :class="getContainerClass()" :style="containerStyles">
+    <div class="flex-grow-1" :class="getContainerClass()">
         <!-- Main chat area -->
         <div class="chat-main flex-grow-1 d-flex flex-column overflow-hidden">
-            <!-- Error banner -->
-            <div
-                v-if="error"
-                class="error-banner alert alert-danger d-flex justify-content-between align-items-center m-2 mb-0"
-                role="alert"
-                aria-live="assertive"
-            >
-                <div class="error-banner__content">
-                    <span class="error-banner__icon">⚠️</span>
-                    <div class="error-banner__text">
-                        <div class="error-banner__title">Connection Error</div>
-                        <div class="error-banner__message">{{ error.message }}</div>
-                    </div>
-                </div>
-                <div class="error-banner__actions">
-                    <button
-                        v-if="error.retryable"
-                        class="btn btn-sm btn-outline-danger me-2"
-                        @click="handleRetryError"
-                        type="button"
-                    >
-                        Retry
-                    </button>
-                    <button
-                        class="btn btn-sm btn-outline-danger"
-                        @click="handleDismissError"
-                        type="button"
-                        aria-label="Dismiss error"
-                    >
-                        ✕
-                    </button>
-                </div>
-            </div>
-
             <!-- Message list -->
             <MessageList
                 :messages="messages"
                 :is-streaming="isStreaming"
                 :auto-scroll="true"
-                :max-height="messageListHeight"
                 @message-retry="handleMessageRetry"
             />
         </div>
@@ -72,47 +37,20 @@
             </div>
 
             <!-- Message input -->
-            <MessageInput
-                :disabled="!canSendMessage"
-                :placeholder="inputPlaceholder"
-                @send-message="handleSendMessage"
-                @focus="handleInputFocus"
-                @blur="handleInputBlur"
-            />
+            <MessageInput @send-message="handleSendMessage" />
         </div>
-
-        <!-- Loading overlay -->
-        <div
-            v-if="isInitializing"
-            class="loading-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-90"
-            role="status"
-            aria-label="Initializing chat"
-        >
-            <div class="loading-overlay__content">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <div class="loading-overlay__text">Connecting to AI assistant...</div>
-            </div>
-        </div>
+        <LoadingOverlay role="status" aria-label="Initializing chat" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { AWSBedrockService } from '@/services/aws-bedrock'
-import type { ChatContainerProps, ErrorContext } from '@/types'
+import type { ErrorContext } from '@/types'
 import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
-
-// Props
-const props = withDefaults(defineProps<ChatContainerProps>(), {
-    title: 'AI Assistant',
-    showHeader: true,
-    height: '600px',
-    width: '100%',
-})
+import LoadingOverlay from './LoadingOverlay.vue'
 
 // Store
 const chatStore = useChatStore()
@@ -120,59 +58,26 @@ const chatStore = useChatStore()
 // Services
 let awsService: AWSBedrockService | null = null
 
-// State
-const isInitializing = ref(true)
-const inputFocused = ref(false)
-
 // Computed properties from store
 const messages = computed(() => chatStore.messages)
 const isStreaming = computed(() => chatStore.isStreaming)
-const error = computed(() => chatStore.error)
-const isConnected = computed(() => chatStore.isConnected)
-const canSendMessage = computed(() => chatStore.canSendMessage && !isInitializing.value)
-
-// UI computed properties
-const inputPlaceholder = computed(() => {
-    if (isInitializing.value) return '連線中...'
-    if (!isConnected.value) return '已斷線'
-    if (isStreaming.value) return '正在回應中...'
-    return '請說明你的問題...'
-})
-
-const messageListHeight = computed(() => {
-    const totalHeight = parseInt(props.height.replace('px', ''))
-    const inputHeight = 120
-    const streamingIndicatorHeight = isStreaming.value ? 40 : 0
-    const errorBannerHeight = error.value ? 60 : 0
-
-    return `${totalHeight - inputHeight - streamingIndicatorHeight - errorBannerHeight}px`
-})
-
-// Container styles
-const containerStyles = computed(() => ({
-    height: props.height,
-    width: props.width,
-}))
+const canSendMessage = computed(() => chatStore.canSendMessage)
 
 // CSS Class functions
 const getContainerClass = () => {
     let classes = 'chat-container'
-    if (isStreaming.value) classes += ' chat-container--streaming'
-    if (error.value) classes += ' chat-container--error'
-    if (isInitializing.value) classes += ' chat-container--initializing'
-    if (inputFocused.value) classes += ' chat-container--input-focused'
+    if (chatStore.isStreaming) classes += ' chat-container--streaming'
+    if (chatStore.error) classes += ' chat-container--error'
+    if (chatStore.isInitializing) classes += ' chat-container--initializing'
     return classes
 }
 
 // Methods
 const initializeService = async () => {
     try {
-        isInitializing.value = true
+        chatStore.setInitializing(true)
 
-        // Initialize AWS service
         awsService = new AWSBedrockService()
-
-        // Initialize connection
         chatStore.connect()
     } catch (error) {
         const errorContext: ErrorContext = {
@@ -184,7 +89,7 @@ const initializeService = async () => {
         }
         chatStore.setError(errorContext)
     } finally {
-        isInitializing.value = false
+        chatStore.setInitializing(false)
     }
 }
 
@@ -240,34 +145,8 @@ const handleMessageRetry = async (messageId: string) => {
     }
 }
 
-const handleRetryError = async () => {
-    chatStore.clearError()
-
-    if (!isConnected.value) {
-        await initializeService()
-    } else {
-        // Retry last message if available
-        const lastMessage = chatStore.retryLastMessage()
-        if (lastMessage) {
-            await handleSendMessage(lastMessage.content)
-        }
-    }
-}
-
-const handleDismissError = () => {
-    chatStore.clearError()
-}
-
 const handleCancelStreaming = () => {
     chatStore.stopStreaming()
-}
-
-const handleInputFocus = () => {
-    inputFocused.value = true
-}
-
-const handleInputBlur = () => {
-    inputFocused.value = false
 }
 
 // Lifecycle
@@ -321,6 +200,8 @@ onUnmounted(() => {
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: relative;
+    height: 100%;
+    min-height: 0;
 }
 
 .chat-container--error {
