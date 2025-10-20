@@ -60,7 +60,7 @@ let awsService: AWSBedrockService | null = null
 
 // Computed properties from store
 const messages = computed(() => chatStore.messages)
-const isStreaming = computed(() => chatStore.isStreaming && !chatStore.error)
+const isStreaming = computed(() => chatStore.isStreaming)
 const canSendMessage = computed(() => chatStore.canSendMessage)
 
 // CSS Class functions
