@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useChatStore } from '@/stores/chat'
-import { AWSBedrockService } from '@/services/aws-bedrock'
+import { awsServiceManager } from '@/services/aws-service-manager'
 import type { ErrorContext } from '@/types'
 import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
@@ -54,9 +54,6 @@ import LoadingOverlay from './LoadingOverlay.vue'
 
 // Store
 const chatStore = useChatStore()
-
-// Services
-let awsService: AWSBedrockService | null = null
 
 // Computed properties from store
 const messages = computed(() => chatStore.messages)
@@ -77,8 +74,12 @@ const initializeService = async () => {
     try {
         chatStore.setInitializing(true)
 
-        awsService = new AWSBedrockService()
-        chatStore.connect()
+        const result = await awsServiceManager.initialize()
+        if (result.success) {
+            chatStore.connect()
+        } else {
+            chatStore.setError(result.error || null)
+        }
     } catch (error) {
         const errorContext: ErrorContext = {
             type: 'api',
@@ -94,6 +95,8 @@ const initializeService = async () => {
 }
 
 const handleSendMessage = async (message: string) => {
+    const awsService = awsServiceManager.getBedrockService()
+
     if (!awsService || !canSendMessage.value) {
         console.log('Cannot send message - service not ready or not allowed')
         return
@@ -155,9 +158,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-    if (awsService) {
-        awsService.dispose()
-    }
     chatStore.endSession()
 })
 
