@@ -4,6 +4,7 @@
             <ChatHeader />
             <ErrorBanner />
             <ChatContainer />
+            <pre><code>{{ wecomLog }}</code></pre>
             <footer class="app-footer">
                 <div class="copyright">
                     KEDING © 2025 Keding Enterprises Co., Ltd. All rights reserved.
@@ -25,6 +26,8 @@ import type { ErrorContext } from '@/types'
 
 // Global error state
 const globalError = ref<ErrorContext | null>(null)
+const wecomLog = ref<Location | null>(null)
+const wecomError = ref<Error | null>(null)
 
 // Error handling
 const handleGlobalError = (error: Error, info?: string) => {
@@ -42,6 +45,21 @@ const handleGlobalError = (error: Error, info?: string) => {
 
 const handleDismissGlobalError = () => {
     globalError.value = null
+}
+
+const handleGetUserInfo = async () => {
+    try {
+        const params = new URLSearchParams(window.location.search)
+        const authCode = params.get('code')
+        // const result = await fetch(
+        //     `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=`,
+        // )
+        // const result = await fetch("https://qyapi.weixin.gq,com/cgi-bin/auth/getuserinfo?access_token=ACCESS_TOKEN&code=CODE")
+        // console.log('result', result)
+        console.log('authCode', authCode)
+    } catch (error) {
+        wecomError.value = error as Error
+    }
 }
 
 // Vue error boundary
@@ -62,6 +80,9 @@ onMounted(() => {
         handleGlobalError(new Error(event.reason))
         event.preventDefault()
     })
+
+    wecomLog.value = window.location
+    // handleGetUserInfo()
 })
 </script>
 <style>
