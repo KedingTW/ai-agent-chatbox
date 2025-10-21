@@ -72,7 +72,7 @@ export class IframeConfigError extends Error {
  * 生成建議的 URL（添加 profile 參數）
  */
 function generateSuggestedUrl(profileId: string = 'profile1'): string {
-    const currentUrl = 'https://sample.com'
+    const currentUrl = 'https://sample.com/'
     const separator = currentUrl.includes('?') ? '&' : '?'
     return `${currentUrl}${separator}profile=${profileId}`
 }
