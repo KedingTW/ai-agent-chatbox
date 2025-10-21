@@ -430,7 +430,7 @@ export const useConfigStore = defineStore('config', () => {
     const profiles = computed<AWSProfile[]>(() => [
         {
             id: 'profile1',
-            name: '設定檔1',
+            name: '客戶助理',
             title: 'Customer Assistant Agent 客戶助理',
             accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
             secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || '',
@@ -439,13 +439,14 @@ export const useConfigStore = defineStore('config', () => {
         },
         {
             id: 'profile2',
-            name: '設定檔2',
-            title: 'HRS助理',
+            name: '科定人助理',
+            title: 'Employee Assistant Agent 科定人助理',
             accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID_B || '',
             secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY_B || '',
             bedrockAgentArn: import.meta.env.VITE_AWS_BEDROCK_AGENT_ARN_B || '',
             sessionId: import.meta.env.VITE_AWS_BEDROCK_SESSION_ID_B || '',
         },
+        // 若新增設定檔，請在此處新增
     ])
 
     // 目前啟用的設定檔

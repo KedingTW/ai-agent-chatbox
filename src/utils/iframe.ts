@@ -96,6 +96,7 @@ export function isValidProfileId(profileId: string | null): boolean {
 /**
  * 標準化設定檔 ID
  * 將簡化的 ID (如 '1', '2') 轉換為完整的 ID
+ * 若新增設定檔，請在此處也新增iframe標準化設定檔
  */
 export function normalizeProfileId(profileId: string | null): string | null {
     if (!profileId) return null
