@@ -15,7 +15,10 @@
         <div class="col-3 col-md-4 chatHeaderMenu">
             <!-- Status、Menu -->
             <div class="chatStatus">
-                <span :class="getStatusIndicatorClass()" class="statusBox">
+                <span
+                    :class="getStatusIndicatorClass"
+                    class="statusBox"
+                >
                     {{ connectionStatusText }}
                 </span>
             </div>
@@ -44,12 +47,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useChatStore, useConfigStore } from '@/stores/chat'
 import { awsServiceManager } from '@/services/aws-service-manager'
+import { safeGetIframeConfig } from '@/utils/iframe'
 
 const configStore = useConfigStore()
 const chatStore = useChatStore()
+
+// iframe 配置錯誤狀態
+const iframeConfigError = ref<string | null>(null)
+const hasValidIframeConfig = ref(true)
 
 // 設定檔管理 - 保持響應性，不要解構
 const profiles = computed(() => configStore.profiles)
@@ -57,9 +65,8 @@ const activeProfile = computed(() => configStore.activeProfile)
 const activeProfileId = computed(() => configStore.activeProfileId)
 
 // iframe 模式相關
-const isIframeMode = computed(() => configStore.isIframeMode)
 const hideProfileMenu = computed(() => configStore.hideProfileMenu)
-const shouldShowMenu = computed(() => !hideProfileMenu.value)
+const shouldShowMenu = computed(() => !hideProfileMenu.value && hasValidIframeConfig.value)
 
 const displayTitle = computed(() => {
     // 目前設定檔title，若無設定檔則顯示預設標題
@@ -67,19 +74,21 @@ const displayTitle = computed(() => {
 })
 
 const connectionStatusText = computed(() => {
+    if (iframeConfigError.value) return '配置錯誤'
     if (chatStore.isInitializing) return '連線中...'
     if (!chatStore.isConnected) return '已斷線'
     if (chatStore.isStreaming) return '正在回應中...'
     return '已上線'
 })
 
-const getStatusIndicatorClass = () => {
+const getStatusIndicatorClass = computed(() => {
     const baseClass = 'statusBox'
+    if (iframeConfigError.value) return `${baseClass} statusBoxError`
     if (chatStore.isInitializing) return `${baseClass} statusBoxConnecting`
     if (!chatStore.isConnected) return `${baseClass} statusBoxDisconnected`
     if (chatStore.isStreaming) return `${baseClass} statusBoxStreaming`
     return `${baseClass} statusBoxConnected`
-}
+})
 
 // 切換設定檔
 const handleProfileSwitch = async (profileId: string) => {
@@ -126,6 +135,31 @@ const handleProfileSwitch = async (profileId: string) => {
         chatStore.setInitializing(false)
     }
 }
+
+// 檢查 iframe 配置
+onMounted(() => {
+    // 檢查 iframe 配置是否有效
+    const iframeResult = safeGetIframeConfig()
+    if (!iframeResult.success) {
+        // iframe 配置無效，設置錯誤狀態
+        iframeConfigError.value = iframeResult.error || '配置錯誤'
+        hasValidIframeConfig.value = false
+        // 設置聊天狀態為錯誤
+        chatStore.setError({
+            type: 'validation',
+            code: 'IFRAME_CONFIG_ERROR',
+            message: iframeResult.error || '配置錯誤',
+            timestamp: new Date(),
+            retryable: false,
+        })
+        // 不初始化 AWS 服務
+        console.error('iframe 配置錯誤:', iframeResult.error)
+    } else {
+        // 配置有效，正常初始化
+        hasValidIframeConfig.value = true
+        iframeConfigError.value = null
+    }
+})
 </script>
 
 <style scoped>
@@ -141,5 +175,10 @@ const handleProfileSwitch = async (profileId: string) => {
 
 .bi-check-lg {
     color: white;
+}
+
+.statusBoxError {
+    background-color: #dc3545 !important;
+    color: white !important;
 }
 </style>

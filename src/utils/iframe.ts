@@ -15,18 +15,28 @@ export function isInIframe(): boolean {
 }
 
 /**
+ * 支援的設定檔參數名稱
+ */
+const PROFILE_PARAM_NAMES = ['profile', 'profileId', 'p'] as const
+
+/**
+ * 從 URLSearchParams 中獲取設定檔 ID
+ */
+function getProfileFromParams(params: URLSearchParams): string | null {
+    for (const paramName of PROFILE_PARAM_NAMES) {
+        const value = params.get(paramName)
+        if (value) return value
+    }
+    return null
+}
+
+/**
  * 從 URL 參數中獲取設定檔 ID
  * 支援的參數名稱：profile, profileId, p
  */
 export function getProfileFromUrl(): string | null {
     const urlParams = new URLSearchParams(window.location.search)
-
-    // 支援多種參數名稱
-    const profileParam = urlParams.get('profile') ||
-        urlParams.get('profileId') ||
-        urlParams.get('p')
-
-    return profileParam
+    return getProfileFromParams(urlParams)
 }
 
 /**
@@ -41,11 +51,30 @@ export function getProfileFromHash(): string | null {
     // 檢查是否是 key=value 格式
     if (hash.includes('=')) {
         const params = new URLSearchParams(hash)
-        return params.get('profile') || params.get('profileId') || params.get('p')
+        return getProfileFromParams(params)
     }
 
     // 直接使用 hash 作為 profile ID
     return hash
+}
+
+/**
+ * iframe 配置錯誤類型
+ */
+export class IframeConfigError extends Error {
+    constructor(message: string) {
+        super(message)
+        this.name = 'IframeConfigError'
+    }
+}
+
+/**
+ * 生成建議的 URL（添加 profile 參數）
+ */
+function generateSuggestedUrl(profileId: string = 'profile1'): string {
+    const currentUrl = window.location.href
+    const separator = currentUrl.includes('?') ? '&' : '?'
+    return `${currentUrl}${separator}profile=${profileId}`
 }
 
 /**
@@ -64,14 +93,17 @@ export function getIframeConfig(): {
     // 優先使用 URL 參數，其次使用 hash
     let profileId = profileFromUrl || profileFromHash
 
-    // 如果是 iframe 模式且沒有指定設定檔，預設使用 profile1
+    // 如果是 iframe 模式且沒有指定設定檔，拋出錯誤
     if (isIframe && !profileId) {
-        profileId = 'profile1'
+        throw new IframeConfigError(
+            `iframe 模式下必須指定設定檔。請在 URL 中添加 profile 參數，例如：${generateSuggestedUrl()}`
+        )
     }
 
     // 在 iframe 模式下預設隱藏選單，除非明確指定不隱藏
     const urlParams = new URLSearchParams(window.location.search)
-    const showMenu = urlParams.get('showMenu') === 'true' || urlParams.get('menu') === 'true'
+    const showMenu = ['true'].includes(urlParams.get('showMenu') || '') ||
+        ['true'].includes(urlParams.get('menu') || '')
     const hideMenu = isIframe && !showMenu
 
     return {
@@ -82,33 +114,35 @@ export function getIframeConfig(): {
 }
 
 /**
+ * 設定檔 ID 映射表
+ * 若新增設定檔，請在此處也新增iframe標準化設定檔
+ */
+const PROFILE_ID_MAP: Record<string, string> = {
+    '1': 'profile1',
+    '2': 'profile2',
+    'profile1': 'profile1',
+    'profile2': 'profile2',
+}
+
+/**
+ * 支援的設定檔 ID 列表
+ */
+const VALID_PROFILE_IDS = Object.keys(PROFILE_ID_MAP)
+
+/**
  * 驗證設定檔 ID 是否有效
  */
 export function isValidProfileId(profileId: string | null): boolean {
-    if (!profileId) return false
-
-    // 支援的設定檔 ID
-    const validProfiles = ['profile1', 'profile2', '1', '2']
-
-    return validProfiles.includes(profileId)
+    return profileId !== null && VALID_PROFILE_IDS.includes(profileId)
 }
 
 /**
  * 標準化設定檔 ID
  * 將簡化的 ID (如 '1', '2') 轉換為完整的 ID
- * 若新增設定檔，請在此處也新增iframe標準化設定檔
  */
 export function normalizeProfileId(profileId: string | null): string | null {
     if (!profileId) return null
-
-    const profileMap: Record<string, string> = {
-        '1': 'profile1',
-        '2': 'profile2',
-        'profile1': 'profile1',
-        'profile2': 'profile2',
-    }
-
-    return profileMap[profileId] || null
+    return PROFILE_ID_MAP[profileId] || null
 }
 
 /**
@@ -120,9 +154,52 @@ export function getNormalizedIframeConfig(): {
     hideMenu: boolean
 } {
     const config = getIframeConfig()
+    const normalizedProfileId = normalizeProfileId(config.profileId)
+
+    // 如果是 iframe 模式且標準化後的設定檔 ID 無效，拋出錯誤
+    if (config.isIframe && !isValidProfileId(normalizedProfileId)) {
+        throw new IframeConfigError(
+            `無效的設定檔 ID: ${config.profileId}。支援的設定檔：profile1, profile2, 1, 2。建議 URL：${generateSuggestedUrl()}`
+        )
+    }
 
     return {
         ...config,
-        profileId: normalizeProfileId(config.profileId),
+        profileId: normalizedProfileId,
+    }
+}
+
+/**
+ * 安全地獲取 iframe 配置，捕獲錯誤並返回錯誤資訊
+ */
+export function safeGetIframeConfig(): {
+    success: boolean
+    config?: {
+        isIframe: boolean
+        profileId: string | null
+        hideMenu: boolean
+    }
+    error?: string
+    suggestedUrl?: string
+} {
+    try {
+        const config = getNormalizedIframeConfig()
+        return {
+            success: true,
+            config
+        }
+    } catch (error) {
+        if (error instanceof IframeConfigError) {
+            return {
+                success: false,
+                error: error.message,
+                suggestedUrl: generateSuggestedUrl()
+            }
+        }
+
+        return {
+            success: false,
+            error: '獲取 iframe 配置時發生未知錯誤'
+        }
     }
 }

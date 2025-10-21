@@ -15,7 +15,7 @@ import type {
     ConnectionStatus,
 } from '@/types'
 import { isUserMessage, isAgentMessage, validateMessage, sanitizeMessageContent } from '@/types'
-import { getNormalizedIframeConfig, isValidProfileId } from '@/utils/iframe'
+import { safeGetIframeConfig, isValidProfileId } from '@/utils/iframe'
 
 export const useChatStore = defineStore('chat', () => {
     // Core state
@@ -400,19 +400,25 @@ export interface AWSProfile {
 }
 
 export const useConfigStore = defineStore('config', () => {
-    // iframe 配置
-    const iframeConfig = getNormalizedIframeConfig()
+    // iframe 配置 - 使用安全的方式獲取
+    const iframeConfigResult = safeGetIframeConfig()
+    const iframeConfig = iframeConfigResult.success ? iframeConfigResult.config! : {
+        isIframe: false,
+        profileId: null,
+        hideMenu: false
+    }
 
     // 根據 iframe 配置決定初始設定檔
-    const getInitialProfileId = (): string => {
-        // 如果是 iframe 模式
-        if (iframeConfig.isIframe) {
-            // 如果有指定有效的設定檔，使用指定的設定檔
-            if (iframeConfig.profileId && isValidProfileId(iframeConfig.profileId)) {
-                return iframeConfig.profileId
-            }
-            // iframe 模式下沒有參數時，統一使用設定檔1
-            return 'profile1'
+    const getInitialProfileId = (): string | null => {
+        // 如果 iframe 配置失敗或是 iframe 模式但沒有有效設定檔，不提供設定檔
+        if (!iframeConfigResult.success ||
+            (iframeConfig.isIframe && (!iframeConfig.profileId || !isValidProfileId(iframeConfig.profileId)))) {
+            return null
+        }
+
+        // 如果是 iframe 模式且有有效設定檔
+        if (iframeConfig.isIframe && iframeConfig.profileId && isValidProfileId(iframeConfig.profileId)) {
+            return iframeConfig.profileId
         }
 
         // 非 iframe 模式，使用預設設定檔1
@@ -420,7 +426,7 @@ export const useConfigStore = defineStore('config', () => {
     }
 
     // 目前啟用的設定檔
-    const activeProfileId = ref<string>(getInitialProfileId())
+    const activeProfileId = ref<string | null>(getInitialProfileId())
 
     // iframe 相關狀態
     const isIframeMode = ref<boolean>(iframeConfig.isIframe)
@@ -450,14 +456,21 @@ export const useConfigStore = defineStore('config', () => {
     ])
 
     // 目前啟用的設定檔
-    const activeProfile = computed(
-        () =>
-            profiles.value.find((profile) => profile.id === activeProfileId.value) ||
-            profiles.value[0],
-    )
+    const activeProfile = computed(() => {
+        if (!activeProfileId.value) {
+            return null
+        }
+        return profiles.value.find((profile) => profile.id === activeProfileId.value) || null
+    })
 
     // 操作方法
     const switchProfile = (profileId: string): boolean => {
+        // 如果 iframe 配置失敗，不允許切換設定檔
+        if (!iframeConfigResult.success) {
+            console.warn('Profile switching is disabled due to iframe configuration error')
+            return false
+        }
+
         // 在 iframe 模式下，如果隱藏選單，則不允許切換設定檔
         if (isIframeMode.value && hideProfileMenu.value) {
             console.warn('Profile switching is disabled in iframe mode')
