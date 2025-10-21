@@ -74,7 +74,7 @@ export class IframeConfigError extends Error {
 function generateSuggestedUrl(profileId: string = 'profile1'): string {
     const currentUrl = 'https://sample.com'
     const separator = currentUrl.includes('?') ? '&' : '?'
-    return `${separator}profile=${profileId}`
+    return `${currentUrl}${separator}profile=${profileId}`
 }
 
 /**
