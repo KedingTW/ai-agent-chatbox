@@ -19,8 +19,8 @@
                     {{ connectionStatusText }}
                 </span>
             </div>
-            <!-- 因功能還沒好先註解 -->
-            <!-- <CDropdown variant="nav-item" dark>
+            <!-- 只在非 iframe 模式或允許顯示選單時顯示設定檔切換選單 -->
+            <CDropdown v-if="shouldShowMenu" variant="nav-item" dark>
                 <CDropdownToggle :caret="false" class="changeMenu"
                     ><i class="bi bi-list"></i
                 ></CDropdownToggle>
@@ -38,7 +38,7 @@
                         </a>
                     </li>
                 </CDropdownMenu>
-            </CDropdown> -->
+            </CDropdown>
         </div>
     </div>
 </template>
@@ -46,15 +46,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useChatStore, useConfigStore } from '@/stores/chat'
-// import { awsServiceManager } from '@/services/aws-service-manager'
+import { awsServiceManager } from '@/services/aws-service-manager'
 
 const configStore = useConfigStore()
 const chatStore = useChatStore()
 
-// Profile management - 保持響應性，不要解構
+// 設定檔管理 - 保持響應性，不要解構
 const profiles = computed(() => configStore.profiles)
 const activeProfile = computed(() => configStore.activeProfile)
 const activeProfileId = computed(() => configStore.activeProfileId)
+
+// iframe 模式相關
+const isIframeMode = computed(() => configStore.isIframeMode)
+const hideProfileMenu = computed(() => configStore.hideProfileMenu)
+const shouldShowMenu = computed(() => !hideProfileMenu.value)
 
 const displayTitle = computed(() => {
     // 目前設定檔title，若無設定檔則顯示預設標題
@@ -81,7 +86,11 @@ const handleProfileSwitch = async (profileId: string) => {
     // 點擊設定檔 profileId，目前設定檔 activeProfileId
     // 已是當前設定檔
     if (profileId === activeProfileId.value) return
+
     try {
+        // 設置初始化狀態
+        chatStore.setInitializing(true)
+
         // 切換新的設定檔
         const success = configStore.switchProfile(profileId)
 
@@ -90,12 +99,31 @@ const handleProfileSwitch = async (profileId: string) => {
             chatStore.startNewSession()
 
             // 重新初始化 AWS 服務
-            // await awsServiceManager.switchProfile(profileId)
+            const result = await awsServiceManager.switchProfile(profileId)
+
+            if (result.success) {
+                // 服務初始化成功，連接狀態
+                chatStore.connect()
+            } else {
+                // 服務初始化失敗
+                console.error('AWS 服務初始化失敗:', result.error?.message)
+                chatStore.setError(result.error || null)
+            }
         } else {
             console.error('設定檔切換失敗')
         }
     } catch (error) {
         console.error('切換設定檔時發生錯誤:', error)
+        chatStore.setError({
+            type: 'validation',
+            code: 'PROFILE_SWITCH_ERROR',
+            message: error instanceof Error ? error.message : '設定檔切換失敗',
+            timestamp: new Date(),
+            retryable: true,
+        })
+    } finally {
+        // 結束初始化狀態
+        chatStore.setInitializing(false)
     }
 }
 </script>

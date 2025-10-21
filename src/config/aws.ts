@@ -3,6 +3,7 @@
  */
 
 import type { AWSConfig } from '@/types/aws'
+import type { AWSProfile } from '@/stores/chat'
 
 /**
  * Load AWS configuration from environment variables
@@ -24,7 +25,28 @@ export function loadAWSConfig(): AWSConfig {
 }
 
 /**
- * Validate AWS configuration
+ * 從特定設定檔載入 AWS 配置
+ */
+export function loadAWSConfigFromProfile(profile: AWSProfile): AWSConfig {
+    const region = import.meta.env.VITE_AWS_REGION || 'us-east-1'
+
+    if (!profile.bedrockAgentArn) {
+        throw new Error(`Profile '${profile.name}' is missing Bedrock Agent ARN`)
+    }
+
+    if (!profile.sessionId) {
+        throw new Error(`Profile '${profile.name}' is missing session ID`)
+    }
+
+    return {
+        region,
+        agentArn: profile.bedrockAgentArn,
+        sessionId: profile.sessionId,
+    }
+}
+
+/**
+ * 驗證 AWS 配置
  */
 export function validateAWSConfig(config: AWSConfig): boolean {
     return !!(config.region && config.agentArn && config.sessionId)
@@ -65,7 +87,34 @@ export function getAWSCredentialsConfig() {
 }
 
 /**
- * Validate AWS credentials availability
+ * 取得特定設定檔的 AWS 憑證配置
+ */
+export function getAWSCredentialsConfigFromProfile(profile: AWSProfile) {
+    const sessionToken = import.meta.env.VITE_AWS_SESSION_TOKEN
+
+    if (!profile.accessKeyId || !profile.secretAccessKey) {
+        throw new Error(`Profile '${profile.name}' is missing AWS credentials`)
+    }
+
+    const credentials: {
+        accessKeyId: string
+        secretAccessKey: string
+        sessionToken?: string
+    } = {
+        accessKeyId: profile.accessKeyId,
+        secretAccessKey: profile.secretAccessKey,
+    }
+
+    // 如果有會話令牌，加入它（用於臨時憑證）
+    if (sessionToken) {
+        credentials.sessionToken = sessionToken
+    }
+
+    return { credentials }
+}
+
+/**
+ * 驗證 AWS 憑證可用性
  */
 export function validateAWSCredentials(): {
     isValid: boolean

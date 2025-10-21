@@ -1,6 +1,6 @@
 /**
- * Chat store for AWS Bedrock chatbot
- * Manages chat state, message history, streaming, and error handling
+ * AWS Bedrock 聊天機器人的 Chat store
+ * 管理聊天狀態、訊息歷史、串流和錯誤處理
  */
 
 import { ref, computed } from 'vue'
@@ -15,6 +15,7 @@ import type {
     ConnectionStatus,
 } from '@/types'
 import { isUserMessage, isAgentMessage, validateMessage, sanitizeMessageContent } from '@/types'
+import { getNormalizedIframeConfig, isValidProfileId } from '@/utils/iframe'
 
 export const useChatStore = defineStore('chat', () => {
     // Core state
@@ -399,10 +400,33 @@ export interface AWSProfile {
 }
 
 export const useConfigStore = defineStore('config', () => {
-    // Current active profile
-    const activeProfileId = ref<string>('profile1')
+    // iframe 配置
+    const iframeConfig = getNormalizedIframeConfig()
 
-    // Available profiles configuration
+    // 根據 iframe 配置決定初始設定檔
+    const getInitialProfileId = (): string => {
+        // 如果是 iframe 模式
+        if (iframeConfig.isIframe) {
+            // 如果有指定有效的設定檔，使用指定的設定檔
+            if (iframeConfig.profileId && isValidProfileId(iframeConfig.profileId)) {
+                return iframeConfig.profileId
+            }
+            // iframe 模式下沒有參數時，統一使用設定檔1
+            return 'profile1'
+        }
+
+        // 非 iframe 模式，使用預設設定檔1
+        return 'profile1'
+    }
+
+    // 目前啟用的設定檔
+    const activeProfileId = ref<string>(getInitialProfileId())
+
+    // iframe 相關狀態
+    const isIframeMode = ref<boolean>(iframeConfig.isIframe)
+    const hideProfileMenu = ref<boolean>(iframeConfig.hideMenu)
+
+    // 可用的設定檔配置
     const profiles = computed<AWSProfile[]>(() => [
         {
             id: 'profile1',
@@ -424,15 +448,21 @@ export const useConfigStore = defineStore('config', () => {
         },
     ])
 
-    // Current active profile
+    // 目前啟用的設定檔
     const activeProfile = computed(
         () =>
             profiles.value.find((profile) => profile.id === activeProfileId.value) ||
             profiles.value[0],
     )
 
-    // Actions
+    // 操作方法
     const switchProfile = (profileId: string): boolean => {
+        // 在 iframe 模式下，如果隱藏選單，則不允許切換設定檔
+        if (isIframeMode.value && hideProfileMenu.value) {
+            console.warn('Profile switching is disabled in iframe mode')
+            return false
+        }
+
         const profile = profiles.value.find((p) => p.id === profileId)
         if (profile) {
             activeProfileId.value = profileId
@@ -445,14 +475,27 @@ export const useConfigStore = defineStore('config', () => {
         return profiles.value.find((profile) => profile.id === profileId)
     }
 
+    // iframe 相關方法
+    const setIframeMode = (enabled: boolean): void => {
+        isIframeMode.value = enabled
+    }
+
+    const setHideProfileMenu = (hide: boolean): void => {
+        hideProfileMenu.value = hide
+    }
+
     return {
-        // State
+        // 狀態
         activeProfileId,
         profiles,
         activeProfile,
+        isIframeMode,
+        hideProfileMenu,
 
-        // Actions
+        // 操作方法
         switchProfile,
         getProfileById,
+        setIframeMode,
+        setHideProfileMenu,
     }
 })

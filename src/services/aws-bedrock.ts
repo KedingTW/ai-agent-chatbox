@@ -23,17 +23,29 @@ import {
     validateAWSConfig,
     getAWSCredentialsConfig,
     validateAWSCredentials,
+    loadAWSConfigFromProfile,
+    getAWSCredentialsConfigFromProfile,
 } from '@/config/aws'
+import type { AWSProfile } from '@/stores/chat'
 
 export class AWSBedrockService {
     private client: BedrockAgentCoreClient | null = null
     private config: AWSConfig
     private connectionStatus: ConnectionStatus
     private initializationPromise: Promise<void> | null = null
+    private profile: AWSProfile | null = null
 
-    constructor(customConfig?: Partial<AWSConfig>) {
+    constructor(customConfig?: Partial<AWSConfig>, profile?: AWSProfile) {
+        // 確認是否有選擇設定檔
+        this.profile = profile || null
+
         // Load and validate configuration
-        this.config = customConfig ? { ...loadAWSConfig(), ...customConfig } : loadAWSConfig()
+        if (profile) {
+            // 若有設定檔,則載入該設定檔
+            this.config = customConfig ? { ...loadAWSConfigFromProfile(profile), ...customConfig } : loadAWSConfigFromProfile(profile)
+        } else {
+            this.config = customConfig ? { ...loadAWSConfig(), ...customConfig } : loadAWSConfig()
+        }
 
         // Initialize connection status
         this.connectionStatus = {
@@ -81,9 +93,14 @@ export class AWSBedrockService {
      */
     private async initializeClient(): Promise<void> {
         try {
+            // 根據設定檔（Profile）或預設值（Default）取得憑證配置
+            const credentialsConfig = this.profile
+                ? getAWSCredentialsConfigFromProfile(this.profile)
+                : getAWSCredentialsConfig()
+
             this.client = new BedrockAgentCoreClient({
                 region: this.config.region,
-                ...getAWSCredentialsConfig(),
+                ...credentialsConfig,
                 maxAttempts: 3,
                 requestHandler: {
                     requestTimeout: 30000, // 30 seconds
