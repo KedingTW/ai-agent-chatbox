@@ -47,6 +47,7 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { awsServiceManager } from '@/services/aws-service-manager'
+import { safeGetIframeConfig } from '@/utils/iframe'
 import type { ErrorContext } from '@/types'
 import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
@@ -73,6 +74,21 @@ const getContainerClass = () => {
 const initializeService = async () => {
     try {
         chatStore.setInitializing(true)
+
+        // 檢查 iframe 配置是否有效
+        const iframeResult = safeGetIframeConfig()
+        if (!iframeResult.success) {
+            // iframe 配置無效，設置錯誤狀態但不初始化 AWS
+            const errorContext: ErrorContext = {
+                type: 'validation',
+                code: 'IFRAME_CONFIG_ERROR',
+                message: iframeResult.error || '配置錯誤',
+                timestamp: new Date(),
+                retryable: false,
+            }
+            chatStore.setError(errorContext)
+            return
+        }
 
         const result = await awsServiceManager.initialize()
         if (result.success) {
