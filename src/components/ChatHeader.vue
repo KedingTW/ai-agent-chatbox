@@ -25,7 +25,7 @@
                     ><i class="bi bi-list"></i
                 ></CDropdownToggle>
                 <CDropdownMenu>
-                    <li v-for="profile in profiles" :key="profile.id">
+                    <div v-for="profile in profiles" :key="profile.id">
                         <a
                             class="dropdown-item"
                             :class="{ active: profile.id === activeProfileId }"
@@ -36,7 +36,7 @@
                             {{ profile.name }}
                             <i v-if="profile.id === activeProfileId" class="bi bi-check-lg ms-2"></i>
                         </a>
-                    </li>
+                    </div>
                 </CDropdownMenu>
             </CDropdown>
         </div>
