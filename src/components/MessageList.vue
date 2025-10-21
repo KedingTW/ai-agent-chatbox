@@ -200,7 +200,7 @@ defineExpose({
     display: flex;
     flex-direction: column;
     height: 100%;
-    background-color: var(--cui-gray-50);
+    background-color: var(--cui-primary-50);
     overflow: hidden;
     position: relative;
 }

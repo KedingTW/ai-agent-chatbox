@@ -6,7 +6,12 @@
     >
         <div :class="avatarClasses">
             <div :class="avatarIconClasses">
-                {{ message.sender === 'user' ? '👤' : '🤖' }}
+                <span v-if="message.sender === 'user'">
+                    <i class="bi bi-person-fill"></i>
+                </span>
+                <span v-else>
+                    {{  '🤖' }}
+                </span>
             </div>
         </div>
 
@@ -222,7 +227,7 @@ const handleRetry = () => {
 }
 
 .message-avatar__icon--agent {
-    background-color: var(--cui-secondary);
+    background-color: var(--cui-primary-100);
     color: white;
 }
 
@@ -250,14 +255,13 @@ const handleRetry = () => {
 .message-bubble--user {
     background-color: var(--cui-primary);
     color: white;
-    border-bottom-right-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
 }
 
 .message-bubble--agent {
     background-color: #fff;
     color: var(--cui-gray-800);
-    border-bottom-left-radius: 0.25rem;
-    border: 1px solid var(--cui-gray-200);
+    border-top-left-radius: 0.25rem;
 }
 
 .message-bubble--streaming {

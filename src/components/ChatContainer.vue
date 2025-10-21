@@ -12,7 +12,7 @@
         </div>
 
         <!-- Input area -->
-        <div class="chat-input-area p-3 border-top">
+        <div class="chat-input-area p-3">
             <!-- Streaming indicator -->
             <div
                 v-if="isStreaming"
@@ -246,8 +246,7 @@ onUnmounted(() => {
 }
 
 .chat-input-area {
-    background-color: var(--cui-gray-50);
-    border-top-color: var(--cui-gray-200);
+    background-color: var(--cui-primary-50);
 }
 
 .streaming-indicator {

@@ -22,7 +22,6 @@
                 <button
                     :class="sendButtonClasses"
                     type="submit"
-                    :disabled="!canSend"
                     :aria-label="sendButtonLabel"
                 >
                     <span v-if="disabled" class="spinner-border spinner-border-sm"></span>
@@ -131,8 +130,8 @@ const sendButtonClasses = computed(() => [
     'btn',
     'message-input__send-button',
     {
-        'btn-primary': canSend.value,
-        'btn-outline-secondary': !canSend.value,
+        'canSend': canSend.value,
+        'noSend': !canSend.value,
     },
 ])
 
@@ -247,16 +246,11 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .message-input {
     background-color: white;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    border: 1px solid var(--cui-gray-200);
-    transition: all 0.2s ease;
+    border-radius: 1rem;
 }
-
-/* .message-input--focused styles removed */
 
 .message-input--disabled {
     background-color: var(--cui-gray-50);
@@ -277,13 +271,10 @@ defineExpose({
 
 .message-input__textarea {
     border-right: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
     resize: none;
-    min-height: 2.5rem;
+    min-height: 7rem;
     line-height: 1.5;
     font-family: inherit;
-    transition: height 0.2s ease;
 }
 
 .message-input__textarea--single {
@@ -295,7 +286,6 @@ defineExpose({
 }
 
 .message-input__textarea:focus {
-    /* Border color change removed */
     box-shadow: none;
 }
 
@@ -306,14 +296,16 @@ defineExpose({
 
 .message-input__send-button {
     border-left: none;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
     min-width: 3rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
-    transition: all 0.2s ease;
+    border-color: var(--bs-border-color);
+    &.noSend{
+        /* 不能點擊的樣式 */
+        pointer-events: none;
+    }
 }
 
 .message-input__send-button:hover:not(:disabled) {
@@ -363,7 +355,6 @@ kbd {
     font-family: monospace;
 }
 
-/* Scrollbar styling for textarea */
 .message-input__textarea::-webkit-scrollbar {
     width: 4px;
 }
@@ -381,15 +372,9 @@ kbd {
     background: var(--cui-gray-400);
 }
 
-/* Responsive design */
 @media (max-width: 768px) {
     .message-input {
         padding: 0.75rem;
-    }
-
-    .message-input__send-button {
-        min-width: 2.5rem;
-        font-size: 0.875rem;
     }
 
     .keyboard-help {
@@ -397,7 +382,6 @@ kbd {
     }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: high) {
     .message-input {
         border-width: 2px;
@@ -406,23 +390,14 @@ kbd {
     .message-input__textarea {
         border-width: 2px;
     }
-
-    .message-input__send-button {
-        border-width: 2px;
-    }
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
     .message-input {
         transition: none;
     }
 
     .message-input__textarea {
-        transition: none;
-    }
-
-    .message-input__send-button {
         transition: none;
     }
 
@@ -435,14 +410,12 @@ kbd {
     }
 }
 
-/* Focus styles for accessibility */
 .message-input__send-button:focus-visible {
     outline: 2px solid var(--cui-primary);
     outline-offset: 2px;
 }
 
 .message-input__textarea:focus-visible {
-    /* Outline color change removed */
     outline: none;
 }
 </style>
