@@ -130,7 +130,7 @@ const handleMessageRetry = (messageId: string) => {
 watch(
     () => props.messages.length,
     async (newLength, oldLength) => {
-        if (newLength > oldLength && props.autoScroll && isAtBottom.value) {
+        if (newLength > oldLength && props.autoScroll) {
             await nextTick()
             scrollToBottom(true)
         }
@@ -141,7 +141,7 @@ watch(
 watch(
     () => props.isStreaming,
     async (isStreaming) => {
-        if (isStreaming && props.autoScroll && isAtBottom.value) {
+        if (isStreaming && props.autoScroll) {
             await nextTick()
             scrollToBottom(false) // Don't animate during streaming for better performance
         }
@@ -157,6 +157,30 @@ watch(
     },
     { deep: true },
 )
+
+watch(
+    // 當AI回復完成後，要滾至最下方
+    () => {
+        const lastMessage = props.messages[props.messages.length - 1];
+        // 我們只需要追蹤 AI agent 的訊息完成狀態
+        if (lastMessage && lastMessage.sender === 'agent') {
+            return lastMessage.isComplete;
+        }
+        return null; // 非 AI 訊息或無訊息時不追蹤
+    },
+    async (isCompletedNow, wasCompletedBefore) => {
+        // 條件判斷：
+        // 1. 新狀態是已完成 (isCompletedNow === true)
+        // 2. 舊狀態是未完成或不存在 (wasCompletedBefore !== true)
+        // 3. 必須開啟 autoScroll
+        if (isCompletedNow === true && wasCompletedBefore !== true && props.autoScroll) {
+
+            // AI 回覆完成，強制滾動到底部 (可以使用動畫)
+            await nextTick();
+            scrollToBottom(true);
+        }
+    }
+);
 
 // Intersection Observer for auto-scroll optimization
 let intersectionObserver: IntersectionObserver | null = null
