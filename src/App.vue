@@ -104,8 +104,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--cui-gray-100);
-    border-top: 1px solid var(--cui-gray-200);
+    background-color: var(--cui-primary-50);
 }
 
 .copyright {

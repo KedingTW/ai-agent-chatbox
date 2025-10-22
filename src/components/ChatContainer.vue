@@ -12,7 +12,7 @@
         </div>
 
         <!-- Input area -->
-        <div class="chat-input-area p-3">
+        <div class="chat-input-area px-3">
             <!-- Streaming indicator -->
             <div
                 v-if="isStreaming"
@@ -214,7 +214,6 @@ onUnmounted(() => {
     flex-direction: column;
     background-color: white;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: relative;
     height: 100%;
     min-height: 0;

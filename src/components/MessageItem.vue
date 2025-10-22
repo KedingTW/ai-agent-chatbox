@@ -10,7 +10,7 @@
                     <i class="bi bi-person-fill"></i>
                 </span>
                 <span v-else>
-                    {{  '🤖' }}
+                    {{ '🤖' }}
                 </span>
             </div>
         </div>
@@ -27,7 +27,7 @@
                     <VMarkdownView
                         :content="message.content"
                         :mode="markdownMode"
-                        class="markdown-content"
+                        class="markdownContent"
                     />
                 </div>
 
@@ -37,9 +37,9 @@
                     :class="streamingIndicatorClasses"
                     aria-label="Message is being generated"
                 >
-                    <span class="streaming-dot"></span>
-                    <span class="streaming-dot"></span>
-                    <span class="streaming-dot"></span>
+                    <span class="streamingDot"></span>
+                    <span class="streamingDot"></span>
+                    <span class="streamingDot"></span>
                 </div>
             </div>
 
@@ -51,12 +51,12 @@
             <!-- Retry button for failed messages -->
             <button
                 v-if="showRetryButton"
-                class="message-retry-button btn btn-sm btn-outline-secondary"
+                class="messageRetryButton btn btn-sm btn-outline-secondary"
                 @click="handleRetry"
                 :aria-label="`Retry sending message: ${message.content}`"
                 type="button"
             >
-                🔄 Retry
+                <i class="bi bi-arrow-clockwise"></i>
             </button>
         </div>
     </div>
@@ -100,69 +100,69 @@ const markdownMode = computed(() => 'light' as const)
 
 // CSS Classes
 const messageClasses = computed(() => [
-    'message-item',
+    'messageItem',
     {
-        'message-item--user': isUserMessage.value,
-        'message-item--agent': isAgentMessage.value,
-        'message-item--streaming': props.isStreaming && props.message.isStreaming,
-        'message-item--failed': isMessageFailed.value,
+        'messageItemUser': isUserMessage.value,
+        'messageItemAgent': isAgentMessage.value,
+        'messageItemStreaming': props.isStreaming && props.message.isStreaming,
+        'messageItemFailed': isMessageFailed.value,
     },
 ])
 
 const avatarClasses = computed(() => [
-    'message-avatar',
+    'messageAvatar',
     {
-        'message-avatar--user': isUserMessage.value,
-        'message-avatar--agent': isAgentMessage.value,
+        'messageAvatarUser': isUserMessage.value,
+        'messageAvatarAgent': isAgentMessage.value,
     },
 ])
 
 const avatarIconClasses = computed(() => [
-    'message-avatar__icon',
+    'messageAvatarIcon',
     {
-        'message-avatar__icon--user': isUserMessage.value,
-        'message-avatar__icon--agent': isAgentMessage.value,
+        'messageAvatarIconUser': isUserMessage.value,
+        'messageAvatarIconAgent': isAgentMessage.value,
     },
 ])
 
 const contentClasses = computed(() => [
-    'message-content',
+    'messageContent',
     {
-        'message-content--user': isUserMessage.value,
-        'message-content--agent': isAgentMessage.value,
+        'messageContent--user': isUserMessage.value,
+        'messageContent--agent': isAgentMessage.value,
     },
 ])
 
 const bubbleClasses = computed(() => [
-    'message-bubble',
+    'messageBubble',
     {
-        'message-bubble--user': isUserMessage.value,
-        'message-bubble--agent': isAgentMessage.value,
-        'message-bubble--streaming': props.isStreaming && props.message.isStreaming,
-        'message-bubble--failed': isMessageFailed.value,
+        'messageBubbleUser': isUserMessage.value,
+        'messageBubbleAgent': isAgentMessage.value,
+        'messageBubbleStreaming': props.isStreaming && props.message.isStreaming,
+        'messageBubbleFailed': isMessageFailed.value,
     },
 ])
 
 const textClasses = computed(() => [
-    'message-text',
+    'messageText',
     {
-        'message-text--user': isUserMessage.value,
-        'message-text--agent': isAgentMessage.value,
+        'messageTextUser': isUserMessage.value,
+        'messageTextAgent': isAgentMessage.value,
     },
 ])
 
 const timestampClasses = computed(() => [
-    'message-timestamp',
+    'messageTimestamp',
     {
-        'message-timestamp--user': isUserMessage.value,
-        'message-timestamp--agent': isAgentMessage.value,
+        'messageTimestampUser': isUserMessage.value,
+        'messageTimestampAgent': isAgentMessage.value,
     },
 ])
 
 const streamingIndicatorClasses = computed(() => [
-    'streaming-indicator',
+    'streamingIndicator',
     {
-        'streaming-indicator--visible': props.isStreaming && props.message.isStreaming,
+        'streamingIndicatorVisible': props.isStreaming && props.message.isStreaming,
     },
 ])
 
@@ -176,40 +176,40 @@ const handleRetry = () => {
 </script>
 
 <style scoped>
-.message-item {
+.messageItem {
     display: flex;
     margin-bottom: 1rem;
     max-width: 100%;
     animation: messageAppear 0.3s ease-out;
 }
 
-.message-item--user {
+.messageItemUser {
     justify-content: flex-end;
 }
 
-.message-item--agent {
+.messageItemAgent {
     justify-content: flex-start;
 }
 
-.message-item--streaming {
+.messageItemStreaming {
     animation: none;
 }
 
-.message-item--failed {
+.messageItemFailed {
     opacity: 0.7;
 }
 
-.message-avatar {
+.messageAvatar {
     flex-shrink: 0;
     margin: 0 0.5rem;
     order: 1;
 }
 
-.message-item--user .message-avatar {
+.messageItemUser .messageAvatar {
     order: 2;
 }
 
-.message-avatar__icon {
+.messageAvatarIcon {
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
@@ -221,30 +221,30 @@ const handleRetry = () => {
     color: var(--cui-gray-700);
 }
 
-.message-avatar__icon--user {
+.messageAvatarIconUser {
     background-color: var(--cui-primary);
     color: white;
 }
 
-.message-avatar__icon--agent {
+.messageAvatarIconAgent {
     background-color: var(--cui-primary-100);
     color: white;
 }
 
-.message-content {
+.messageContent {
     flex: 1;
     max-width: 70%;
     order: 2;
 }
 
-.message-item--user .message-content {
+.messageItemUser .messageContent {
     order: 1;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
-.message-bubble {
+.messageBubble{
     padding: 0.75rem 1rem;
     border-radius: 1rem;
     word-wrap: break-word;
@@ -252,52 +252,50 @@ const handleRetry = () => {
     transition: all 0.2s ease;
 }
 
-.message-bubble--user {
+.messageBubbleUser {
     background-color: var(--cui-primary);
     color: white;
-    border-top-right-radius: 0.25rem;
 }
 
-.message-bubble--agent {
+.messageBubbleAgent {
     background-color: #fff;
     color: var(--cui-gray-800);
-    border-top-left-radius: 0.25rem;
 }
 
-.message-bubble--streaming {
+.messageBubbleStreaming {
     border-color: var(--cui-info);
     box-shadow: 0 0 0 2px rgba(var(--cui-info-rgb), 0.1);
 }
 
-.message-bubble--failed {
+.messageBubbleFailed {
     border-color: var(--cui-danger);
     background-color: rgba(var(--cui-danger-rgb), 0.1);
 }
 
-.message-text--user {
+.messageTextUser {
     color: white;
 }
 
-.message-text--agent {
+.messageTextAgent {
     color: var(--cui-gray-800);
 }
 
-.message-timestamp {
+.messageTimestamp {
     font-size: 0.75rem;
     color: var(--cui-gray-500);
     margin-top: 0.25rem;
     cursor: help;
 }
 
-.message-timestamp--user {
+.messageTimestampUser {
     text-align: right;
 }
 
-.message-timestamp--agent {
+.messageTimestampAgent {
     text-align: left;
 }
 
-.streaming-indicator {
+.streamingIndicator {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
@@ -306,11 +304,11 @@ const handleRetry = () => {
     transition: opacity 0.3s ease;
 }
 
-.streaming-indicator--visible {
+.streamingIndicatorVisible {
     opacity: 1;
 }
 
-.streaming-dot {
+.streamingDot {
     width: 0.375rem;
     height: 0.375rem;
     border-radius: 50%;
@@ -319,22 +317,22 @@ const handleRetry = () => {
     animation: streamingPulse 1.4s infinite ease-in-out;
 }
 
-.streaming-dot:nth-child(1) {
+.streamingDot:nth-child(1) {
     animation-delay: -0.32s;
 }
 
-.streaming-dot:nth-child(2) {
+.streamingDot:nth-child(2) {
     animation-delay: -0.16s;
 }
 
-.message-retry-button {
+.messageRetryButton {
     margin-top: 0.5rem;
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
     align-self: flex-start;
 }
 
-.message-item--user .message-retry-button {
+.messageItemUser .messageRetryButton {
     align-self: flex-end;
 }
 
@@ -367,74 +365,74 @@ const handleRetry = () => {
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .message-content {
+    .messageContent {
         max-width: 85%;
     }
 
-    .message-avatar {
+    .messageAvatar {
         margin: 0 0.25rem;
     }
 
-    .message-avatar__icon {
+    .messageAvatarIcon {
         width: 1.5rem;
         height: 1.5rem;
         font-size: 0.875rem;
     }
 
-    .message-bubble {
+    .messageBubble {
         padding: 0.5rem 0.75rem;
     }
 }
 
 /* High contrast mode */
 @media (prefers-contrast: high) {
-    .message-bubble--agent {
+    .messageBubbleAgent {
         border-width: 2px;
     }
 
-    .message-bubble--user {
+    .messageBubbleUser {
         border: 2px solid var(--cui-primary-dark);
     }
 }
 
 /* Markdown content styling */
-.markdown-content {
+.markdownContent {
     line-height: 1.6;
 }
 
-.markdown-content :deep(h1),
-.markdown-content :deep(h2),
-.markdown-content :deep(h3),
-.markdown-content :deep(h4),
-.markdown-content :deep(h5),
-.markdown-content :deep(h6) {
+.markdownContent :deep(h1),
+.markdownContent :deep(h2),
+.markdownContent :deep(h3),
+.markdownContent :deep(h4),
+.markdownContent :deep(h5),
+.markdownContent :deep(h6) {
     margin: 0.5rem 0;
     font-weight: 600;
 }
 
-.markdown-content :deep(p) {
+.markdownContent :deep(p) {
     margin: 0.5rem 0;
 }
 
-.markdown-content :deep(p:first-child) {
+.markdownContent :deep(p:first-child) {
     margin-top: 0;
 }
 
-.markdown-content :deep(p:last-child) {
+.markdownContent :deep(p:last-child) {
     margin-bottom: 0;
 }
 
-.markdown-content :deep(ul),
-.markdown-content :deep(ol) {
+.markdownContent :deep(ul),
+.markdownContent :deep(ol) {
     margin: 0.5rem 0;
     padding-left: 1.5rem;
 }
 
-.markdown-content :deep(li) {
+.markdownContent :deep(li) {
     margin: 0.25rem 0;
 }
 
-.markdown-content :deep(code) {
+.markdownContent :deep(code) {
     background-color: rgba(0, 0, 0, 0.1);
     padding: 0.125rem 0.25rem;
     border-radius: 0.25rem;
@@ -442,11 +440,11 @@ const handleRetry = () => {
     font-size: 0.875em;
 }
 
-.message-bubble--user .markdown-content :deep(code) {
+.messageBubbleUser .markdownContent :deep(code) {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-.markdown-content :deep(pre) {
+.markdownContent :deep(pre) {
     background-color: rgba(0, 0, 0, 0.05);
     padding: 0.75rem;
     border-radius: 0.375rem;
@@ -454,16 +452,16 @@ const handleRetry = () => {
     margin: 0.5rem 0;
 }
 
-.message-bubble--user .markdown-content :deep(pre) {
+.messageBubbleUser .markdownContent :deep(pre) {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-.markdown-content :deep(pre code) {
+.markdownContent :deep(pre code) {
     background-color: transparent;
     padding: 0;
 }
 
-.markdown-content :deep(blockquote) {
+.markdownContent :deep(blockquote) {
     border-left: 3px solid var(--cui-gray-300);
     padding-left: 1rem;
     margin: 0.5rem 0;
@@ -471,60 +469,60 @@ const handleRetry = () => {
     color: var(--cui-gray-600);
 }
 
-.message-bubble--user .markdown-content :deep(blockquote) {
+.messageBubbleUser .markdownContent :deep(blockquote) {
     border-left-color: rgba(255, 255, 255, 0.5);
     color: rgba(255, 255, 255, 0.9);
 }
 
-.markdown-content :deep(a) {
+.markdownContent :deep(a) {
     color: var(--cui-primary);
     text-decoration: underline;
 }
 
-.message-bubble--user .markdown-content :deep(a) {
+.messageBubbleUser .markdownContent :deep(a) {
     color: rgba(255, 255, 255, 0.9);
 }
 
-.markdown-content :deep(table) {
+.markdownContent :deep(table) {
     border-collapse: collapse;
     width: 100%;
     margin: 0.5rem 0;
     font-size: 0.875em;
 }
 
-.markdown-content :deep(th),
-.markdown-content :deep(td) {
+.markdownContent :deep(th),
+.markdownContent :deep(td) {
     border: 1px solid var(--cui-gray-300);
     padding: 0.375rem 0.5rem;
     text-align: left;
 }
 
-.markdown-content :deep(th) {
+.markdownContent :deep(th) {
     background-color: var(--cui-gray-100);
     font-weight: 600;
 }
 
-.message-bubble--user .markdown-content :deep(th),
-.message-bubble--user .markdown-content :deep(td) {
+.messageBubbleUser .markdownContent :deep(th),
+.messageBubbleUser .markdownContent :deep(td) {
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-.message-bubble--user .markdown-content :deep(th) {
+.messageBubbleUser .markdownContent :deep(th) {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .message-item {
+    .messageItem {
         animation: none;
     }
 
-    .streaming-dot {
+    .streamingDot {
         animation: none;
         opacity: 0.7;
     }
 
-    .message-bubble {
+    .messageBubble {
         transition: none;
     }
 }

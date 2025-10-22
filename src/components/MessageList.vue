@@ -13,9 +13,9 @@
             role="status"
             aria-label="No messages yet"
         >
-            <div class="empty-state__icon">💬</div>
-            <div class="empty-state__title">開始對話吧</div>
-            <div class="empty-state__subtitle">隨時詢問客戶資訊，全面掌握決策依據</div>
+            <div class="emptyStateIcon"><i class="bi bi-chat-dots-fill"></i></div>
+            <div class="emptyStateTitle">開始對話吧</div>
+            <div class="emptyStateSubtitle">{{ displayDesc }}</div>
         </div>
 
         <!-- Message list -->
@@ -25,15 +25,6 @@
             class="messages h-100 overflow-auto p-3"
             @scroll="handleScroll"
         >
-            <!-- Messages -->
-            <MessageItem
-                v-for="message in messages"
-                :key="message.id"
-                :message="message"
-                :is-streaming="isStreaming && message.id === currentStreamingMessageId"
-                @retry="handleMessageRetry"
-            />
-
             <!-- Scroll to bottom button -->
             <Transition name="scroll-button">
                 <button
@@ -46,6 +37,15 @@
                     ↓
                 </button>
             </Transition>
+
+            <!-- Messages -->
+            <MessageItem
+                v-for="message in messages"
+                :key="message.id"
+                :message="message"
+                :is-streaming="isStreaming && message.id === currentStreamingMessageId"
+                @retry="handleMessageRetry"
+            />
         </div>
     </div>
 </template>
@@ -54,7 +54,14 @@
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import type { MessageListProps } from '@/types'
 import MessageItem from './MessageItem.vue'
+import { useConfigStore } from '@/stores/chat'
 
+const configStore = useConfigStore()
+const activeProfile = computed(() => configStore.activeProfile)
+const displayDesc = computed(() => {
+    // 目前設定檔description，若無設定檔則顯示預設標題
+    return activeProfile.value?.description || 'AI Assistant'
+})
 // Props
 const props = withDefaults(defineProps<MessageListProps>(), {
     isStreaming: false,
@@ -79,7 +86,7 @@ const currentStreamingMessageId = ref<string | null>(null)
 const hasMessages = computed(() => props.messages.length > 0)
 
 const containerClasses = computed(() => [
-    'message-list',
+    'messageList',
     {
         'message-list--empty': !hasMessages.value,
         'message-list--streaming': props.isStreaming,
@@ -196,7 +203,7 @@ defineExpose({
 </script>
 
 <style scoped>
-.message-list {
+.messageList {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -218,22 +225,25 @@ defineExpose({
     color: var(--cui-gray-600);
 }
 
-.empty-state__icon {
+.emptyStateIcon {
     font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.5;
+    color: var(--cui-primary)
 }
 
-.empty-state__title {
+.emptyStateTitle {
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: var(--cui-gray-700);
+    opacity: 0.8;
+    color: var(--cui-primary);
 }
 
-.empty-state__subtitle {
+.emptyStateSubtitle {
     font-size: 0.875rem;
-    color: var(--cui-gray-500);
+    opacity: 0.5;
+    color: var(--cui-primary);
 }
 
 .messages {
@@ -272,7 +282,7 @@ defineExpose({
 }
 
 .scroll-to-bottom {
-    bottom: 1rem;
+    bottom: 200px;
     right: 1rem;
     width: 2.5rem;
     height: 2.5rem;
@@ -309,22 +319,18 @@ defineExpose({
     }
 
     .scroll-to-bottom {
-        bottom: 0.5rem;
         right: 0.5rem;
-        width: 2rem;
-        height: 2rem;
-        font-size: 0.875rem;
     }
 
-    .empty-state__icon {
+    .emptyStateIcon {
         font-size: 2rem;
     }
 
-    .empty-state__title {
+    .emptyStateTitle {
         font-size: 1rem;
     }
 
-    .empty-state__subtitle {
+    .emptyStateSubtitle {
         font-size: 0.75rem;
     }
 }

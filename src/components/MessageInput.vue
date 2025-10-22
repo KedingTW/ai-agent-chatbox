@@ -1,14 +1,14 @@
 <template>
     <div :class="containerClasses">
-        <form @submit.prevent="handleSubmit" class="message-input-form">
+        <form @submit.prevent="handleSubmit" class="messageInputForm">
             <!-- Input field -->
-            <div class="input-group message-input__group">
+            <div class="messageInputGroup">
                 <textarea
                     ref="textareaRef"
                     v-model="inputValue"
                     :class="textareaClasses"
                     :placeholder="placeholder"
-                    :disabled="disabled"
+                    :disabled="chatStore.isStreaming || disabled"
                     rows="3"
                     @keydown="handleKeyDown"
                     @focus="handleFocus"
@@ -17,22 +17,32 @@
                     @compositionend="handleCompositionEnd"
                     aria-label="Type your message"
                 />
-
-                <!-- Send button -->
                 <button
+                    v-if="!chatStore.isStreaming"
                     :class="sendButtonClasses"
                     type="submit"
                     :aria-label="sendButtonLabel"
                 >
                     <span v-if="disabled" class="spinner-border spinner-border-sm"></span>
-                    <span v-else>{{ sendButtonText }}</span>
+                    <span v-else>
+                        <i v-if="chatStore.canSendMessage" class="bi bi-send-fill"></i>
+                    </span>
+                </button>
+                <button
+                    v-else
+                    class="messageInputSendBtn"
+                    @click="handleCancelStreaming"
+                    type="button"
+                    aria-label="Cancel current response"
+                >
+                    <i class="bi bi-square-fill"></i>
                 </button>
             </div>
 
             <!-- Error message -->
             <div
                 v-if="errorMessage"
-                class="error-message text-danger mt-2"
+                class="errorMessage text-danger mt-2"
                 role="alert"
                 aria-live="assertive"
             >
@@ -108,27 +118,26 @@ const sendButtonLabel = computed(() => {
 
 // CSS Classes
 const containerClasses = computed(() => [
-    'message-input',
+    'messageInput',
     {
-        'message-input--disabled': !chatStore.canSendMessage,
-        'message-input--focused': isFocused.value,
-        'message-input--error': !!errorMessage.value,
+        'messageInputDisabled': !chatStore.canSendMessage,
+        'messageInputFocused': isFocused.value,
+        'messageInputError': !!errorMessage.value,
     },
 ])
 
 const textareaClasses = computed(() => [
     'form-control',
-    'message-input__textarea',
+    'messageInputTextarea',
     {
         'is-invalid': !!errorMessage.value,
-        'message-input__textarea--multiline': props.multiline,
-        'message-input__textarea--single': !props.multiline,
+        'messageInputTextareaMultiline': props.multiline,
+        'messageInputTextareaSingle': !props.multiline,
     },
 ])
 
 const sendButtonClasses = computed(() => [
-    'btn',
-    'message-input__send-button',
+    'messageInputSendBtn',
     {
         'canSend': canSend.value,
         'noSend': !canSend.value,
@@ -194,6 +203,9 @@ const handleCompositionStart = () => {
 const handleCompositionEnd = () => {
     isComposing.value = false
 }
+const handleCancelStreaming = () => {
+    chatStore.stopStreaming()
+}
 
 const setTyping = (typing: boolean) => {
     if (isTyping.value !== typing) {
@@ -216,6 +228,7 @@ const clearInput = () => {
     setTyping(false)
 
     if (textareaRef.value) {
+        textareaRef.value.innerText = ''
         textareaRef.value.style.height = 'auto'
     }
 }
@@ -247,149 +260,44 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.message-input {
-    background-color: white;
-    border-radius: 1rem;
-}
 
-.message-input--disabled {
+.messageInputDisabled {
     background-color: var(--cui-gray-50);
     opacity: 0.7;
 }
 
-.message-input--error {
+.messageInputError {
     border-color: var(--cui-danger);
 }
 
-.message-input-form {
-    width: 100%;
-}
-
-.message-input__group {
-    margin-bottom: 0;
-}
-
-.message-input__textarea {
-    border-right: none;
-    resize: none;
-    min-height: 7rem;
-    line-height: 1.5;
-    font-family: inherit;
-}
-
-.message-input__textarea--single {
+.messageInputTextareaSingle {
     overflow: hidden;
 }
 
-.message-input__textarea--multiline {
+.messageInputTextareaMultiline {
     overflow-y: auto;
 }
 
-.message-input__textarea:focus {
+.messageInputTextarea:focus {
     box-shadow: none;
 }
 
-.message-input__textarea::placeholder {
+.messageInputTextarea::placeholder {
     color: var(--cui-gray-500);
     font-style: italic;
 }
 
-.message-input__send-button {
-    border-left: none;
-    min-width: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    border-color: var(--bs-border-color);
-    &.noSend{
-        /* 不能點擊的樣式 */
-        pointer-events: none;
-    }
-}
-
-.message-input__send-button:hover:not(:disabled) {
+.messageInputSendBtn:hover:not(:disabled) {
     transform: translateY(-1px);
 }
 
-.message-input__send-button:active {
+.messageInputSendBtn:active {
     transform: translateY(0);
 }
 
-.message-input__status {
-    min-height: 1.25rem;
-}
-
-.character-count {
-    font-variant-numeric: tabular-nums;
-}
-
-.typing-indicator {
-    font-size: 0.75rem;
-    color: var(--cui-info);
-    font-style: italic;
-}
-
-.error-message {
+.errorMessage {
     font-size: 0.75rem;
     margin: 0;
-}
-
-.keyboard-help {
-    opacity: 0;
-    transform: translateY(-0.5rem);
-    transition: all 0.3s ease;
-}
-
-.message-input--focused .keyboard-help {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-kbd {
-    background-color: var(--cui-gray-100);
-    border: 1px solid var(--cui-gray-300);
-    border-radius: 0.25rem;
-    padding: 0.125rem 0.25rem;
-    font-size: 0.75rem;
-    font-family: monospace;
-}
-
-.message-input__textarea::-webkit-scrollbar {
-    width: 4px;
-}
-
-.message-input__textarea::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.message-input__textarea::-webkit-scrollbar-thumb {
-    background: var(--cui-gray-300);
-    border-radius: 2px;
-}
-
-.message-input__textarea::-webkit-scrollbar-thumb:hover {
-    background: var(--cui-gray-400);
-}
-
-@media (max-width: 768px) {
-    .message-input {
-        padding: 0.75rem;
-    }
-
-    .keyboard-help {
-        display: none;
-    }
-}
-
-@media (prefers-contrast: high) {
-    .message-input {
-        border-width: 2px;
-    }
-
-    .message-input__textarea {
-        border-width: 2px;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -401,21 +309,39 @@ kbd {
         transition: none;
     }
 
-    .message-input__send-button:hover:not(:disabled) {
+    .messageInputSendBtn:hover:not(:disabled) {
         transform: none;
     }
+}
 
-    .keyboard-help {
-        transition: none;
+.messageInputTextarea{
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    min-height: 150px;
+    width: 100%;
+}
+.messageInputSendBtn{
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    border-radius: 100%;
+    outline: none;
+    border: none;
+    height: 40px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    cursor: pointer;
+    background-color: var(--cui-primary);
+    color: white;
+    &.noSend{
+        /* 不能點擊的樣式 */
+        pointer-events: none;
     }
 }
-
-.message-input__send-button:focus-visible {
-    outline: 2px solid var(--cui-primary);
-    outline-offset: 2px;
-}
-
-.message-input__textarea:focus-visible {
-    outline: none;
+.messageInputGroup{
+    position: relative;
 }
 </style>
