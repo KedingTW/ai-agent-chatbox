@@ -158,12 +158,10 @@
     }
 
     &Streaming {
-        border-color: var(--cui-info);
-        box-shadow: 0 0 0 2px rgba(var(--cui-info-rgb), 0.1);
+        box-shadow: 0 0 0 2px rgba(var(--cui-primary-rgb), 0.1);
     }
 
     &Failed {
-        border-color: var(--cui-danger);
         background-color: rgba(var(--cui-danger-rgb), 0.1);
     }
 }

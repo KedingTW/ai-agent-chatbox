@@ -5,11 +5,11 @@
         role="status"
         :aria-label="ariaLabel"
     >
-        <div class="loading-overlay__content">
+        <div class="loadingOverlayContent">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <div class="loading-overlay__text">Connecting to AI assistant...</div>
+            <div class="loadingOverlayText">Connecting to AI assistant...</div>
         </div>
     </div>
 </template>
@@ -33,11 +33,11 @@ const chatStore = useChatStore()
     z-index: 1000;
 }
 
-.loading-overlay__content {
+.loadingOverlayContent {
     text-align: center;
 }
 
-.loading-overlay__text {
+.loadingOverlayText {
     margin-top: 1rem;
     color: var(--cui-gray-600);
     font-size: 0.875rem;

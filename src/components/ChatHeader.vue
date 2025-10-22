@@ -75,9 +75,9 @@ const displayTitle = computed(() => {
 
 const connectionStatusText = computed(() => {
     if (iframeConfigError.value) return '配置錯誤'
-    if (chatStore.isInitializing) return '連線中...'
+    if (chatStore.isInitializing) return '連線中'
     if (!chatStore.isConnected) return '已斷線'
-    if (chatStore.isStreaming) return '正在回應中...'
+    if (chatStore.isStreaming) return '回應中'
     return '已上線'
 })
 

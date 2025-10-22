@@ -1,18 +1,18 @@
 <template>
     <div
         v-if="error"
-        class="error-banner alert alert-danger d-flex justify-content-between align-items-center"
+        class="errorBanner alert alert-danger d-flex justify-content-between align-items-center"
         role="alert"
         aria-live="assertive"
     >
-        <div class="error-banner__content">
-            <span class="error-banner__icon">⚠️</span>
-            <div class="error-banner__text">
-                <div class="error-banner__title">Connection Error</div>
-                <div class="error-banner__message">{{ error.message }}</div>
+        <div class="errorBannerContent">
+            <span class="errorBannerIcon">⚠️</span>
+            <div class="errorBannerText">
+                <div class="errorBannerTitle">Connection Error</div>
+                <div class="errorBannerMessage">{{ error.message }}</div>
             </div>
         </div>
-        <div class="error-banner__actions">
+        <div class="errorBannerActions">
             <button
                 v-if="error.retryable"
                 class="btn btn-sm btn-outline-danger me-2"
@@ -42,37 +42,36 @@ const error = computed(() => chatStore.error)
 </script>
 
 <style scoped>
-.error-banner {
+.errorBanner {
     margin-bottom: 0;
 }
 
-.error-banner__content {
+.errorBannerContent {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.error-banner__icon {
+.errorBannerIcon {
     font-size: 1.25rem;
 }
 
-.error-banner__title {
+.errorBannerTitle {
     font-weight: 600;
     margin-bottom: 0.25rem;
 }
 
-.error-banner__message {
+.errorBannerMessage {
     font-size: 0.875rem;
 }
 
-.error-banner__actions {
+.errorBannerActions {
     display: flex;
     gap: 0.5rem;
 }
 
-/* Responsive design */
 @media (max-width: 768px) {
-    .error-banner {
+    .errorBanner {
         margin: 0.75rem;
         margin-bottom: 0;
     }

@@ -1,7 +1,7 @@
 <template>
     <div class="flex-grow-1" :class="getContainerClass()">
         <!-- Main chat area -->
-        <div class="chat-main flex-grow-1 d-flex flex-column overflow-hidden">
+        <div class="chatMain flex-grow-1 d-flex flex-column overflow-hidden">
             <!-- Message list -->
             <MessageList
                 :messages="messages"
@@ -12,19 +12,19 @@
         </div>
 
         <!-- Input area -->
-        <div class="chat-input-area px-3">
+        <div class="chatInputArea px-3 pt-3">
             <!-- Streaming indicator -->
             <div
                 v-if="isStreaming"
-                class="streaming-indicator d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
+                class="streamingIndicator d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
                 role="status"
                 aria-live="polite"
             >
-                <div class="streaming-indicator__content">
-                    <span class="streaming-indicator__icon">
+                <div class="streamingIndicatorContent">
+                    <span class="streamingIndicator__icon">
                         <span class="spinner-border spinner-border-sm"></span>
                     </span>
-                    <span class="streaming-indicator__text">AI is thinking...</span>
+                    <span class="streamingIndicatorText">AI is thinking...</span>
                 </div>
                 <button
                     class="btn btn-sm btn-outline-secondary"
@@ -63,10 +63,10 @@ const canSendMessage = computed(() => chatStore.canSendMessage)
 
 // CSS Class functions
 const getContainerClass = () => {
-    let classes = 'chat-container'
-    if (chatStore.isStreaming) classes += ' chat-container--streaming'
-    if (chatStore.error) classes += ' chat-container--error'
-    if (chatStore.isInitializing) classes += ' chat-container--initializing'
+    let classes = 'chatContainer'
+    if (chatStore.isStreaming) classes += ' chatContainerStreaming'
+    if (chatStore.error) classes += ' chatContainerError'
+    if (chatStore.isInitializing) classes += ' chatContainerInitializing'
     return classes
 }
 
@@ -209,7 +209,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.chat-container {
+.chatContainer {
     display: flex;
     flex-direction: column;
     background-color: white;
@@ -219,84 +219,49 @@ onUnmounted(() => {
     min-height: 0;
 }
 
-.chat-container--error {
+.chatContainerError {
     border-color: var(--cui-danger);
 }
 
-.chat-container--initializing {
+.chatContainerInitializing {
     pointer-events: none;
 }
 
-.chat-main {
+.chatMain {
     min-height: 0;
-    /* Important for flex child to shrink */
 }
 
-.error-banner {
+.errorBanner {
     margin-bottom: 0;
 }
 
-.error-banner__content {
+.errorBannerContent {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.error-banner__icon {
-    font-size: 1.25rem;
-}
-
-.error-banner__title {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-.error-banner__message {
-    font-size: 0.875rem;
-}
-
-.error-banner__actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.chat-input-area {
+.chatInputArea {
     background-color: var(--cui-primary-50);
 }
 
-.streaming-indicator {
+.streamingIndicator {
     background-color: rgba(var(--cui-info-rgb), 0.1);
     border: 1px solid rgba(var(--cui-info-rgb), 0.2);
 }
 
-.streaming-indicator__content {
+.streamingIndicatorContent {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.streaming-indicator__text {
+.streamingIndicatorText {
     font-size: 0.875rem;
     color: var(--cui-info);
     font-style: italic;
 }
 
-.loading-overlay {
-    backdrop-filter: blur(2px);
-    z-index: 1000;
-}
-
-.loading-overlay__content {
-    text-align: center;
-}
-
-.loading-overlay__text {
-    margin-top: 1rem;
-    color: var(--cui-gray-600);
-    font-size: 0.875rem;
-}
-
-/* Animations */
 @keyframes pulse {
     0%,
     100% {
@@ -308,43 +273,36 @@ onUnmounted(() => {
     }
 }
 
-/* Responsive design */
 @media (max-width: 768px) {
-    .chat-input-area {
+    .chatInputArea {
         padding: 0.75rem;
     }
 
-    .error-banner {
+    .errorBanner {
         margin: 0.75rem;
         margin-bottom: 0;
     }
 
-    .streaming-indicator {
+    .streamingIndicator {
         margin-bottom: 0.75rem;
         padding: 0.75rem;
     }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: high) {
-    .chat-container {
+    .chatContainer {
         border-width: 2px;
     }
 
-    .chat-input-area {
+    .chatInputArea {
         border-top-width: 2px;
     }
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .status-indicator--connecting,
-    .status-indicator--streaming {
+    .statusIndicatorConnecting,
+    .statusIndicatorStreaming {
         animation: none;
-    }
-
-    .loading-overlay {
-        backdrop-filter: none;
     }
 }
 </style>

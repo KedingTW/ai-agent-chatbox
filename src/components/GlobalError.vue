@@ -1,10 +1,10 @@
 <template>
-    <div v-if="error" class="global-error-overlay" role="alert" aria-live="assertive">
-        <div class="global-error-content">
-            <div class="global-error-icon">⚠️</div>
-            <h2 class="global-error-title">Application Error</h2>
-            <p class="global-error-message">{{ error.message }}</p>
-            <div class="global-error-actions">
+    <div v-if="error" class="globalErrorOverlay" role="alert" aria-live="assertive">
+        <div class="globalErrorContent">
+            <div class="globalErrorIcon">⚠️</div>
+            <h2 class="globalErrorTitle">Application Error</h2>
+            <p class="globalErrorMessage">{{ error.message }}</p>
+            <div class="globalErrorActions">
                 <button class="btn btn-primary" @click="handleReload" type="button">
                     Reload Application
                 </button>
@@ -39,7 +39,7 @@ const handleReload = () => {
 </script>
 
 <style scoped>
-.global-error-overlay {
+.globalErrorOverlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -52,7 +52,7 @@ const handleReload = () => {
     z-index: 9999;
 }
 
-.global-error-content {
+.globalErrorContent {
     background-color: white;
     border-radius: 0.5rem;
     padding: 2rem;
@@ -62,25 +62,25 @@ const handleReload = () => {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
-.global-error-icon {
+.globalErrorIcon {
     font-size: 3rem;
     margin-bottom: 1rem;
 }
 
-.global-error-title {
+.globalErrorTitle {
     color: var(--cui-danger);
     margin-bottom: 1rem;
     font-size: 1.5rem;
     font-weight: 600;
 }
 
-.global-error-message {
+.globalErrorMessage {
     color: var(--cui-gray-700);
     margin-bottom: 1.5rem;
     line-height: 1.5;
 }
 
-.global-error-actions {
+.globalErrorActions {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
@@ -89,36 +89,36 @@ const handleReload = () => {
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .global-error-content {
+    .globalErrorContent {
         padding: 1.5rem;
         margin: 1rem;
     }
 
-    .global-error-actions {
+    .globalErrorActions {
         flex-direction: column;
     }
 
-    .global-error-actions .btn {
+    .globalErrorActions .btn {
         width: 100%;
         margin: 0 !important;
         margin-bottom: 0.5rem !important;
     }
 
-    .global-error-actions .btn:last-child {
+    .globalErrorActions .btn:last-child {
         margin-bottom: 0 !important;
     }
 }
 
 /* High contrast mode */
 @media (prefers-contrast: high) {
-    .global-error-content {
+    .globalErrorContent {
         border: 2px solid var(--cui-gray-800);
     }
 }
 
 /* Print styles */
 @media print {
-    .global-error-overlay {
+    .globalErrorOverlay {
         display: none;
     }
 }
