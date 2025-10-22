@@ -99,3 +99,44 @@
         }
     }
 }
+.dropdownItem.active {
+    background-color: var(--cui-primary);
+    color: white;
+}
+
+.dropdownItem.active:hover {
+    background-color: var(--cui-primary-dark);
+    color: white;
+}
+
+.statusBoxError {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.chatContainer {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    @media (prefers-contrast: high) {
+        border-width: 2px;
+    }
+}
+
+.chatContainerError {
+    border-color: var(--cui-danger);
+}
+
+.chatContainerInitializing {
+    pointer-events: none;
+}
+
+.chatMain {
+    min-height: 0;
+}
+
+

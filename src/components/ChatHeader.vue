@@ -27,7 +27,7 @@
                 <CDropdownMenu>
                     <div v-for="profile in profiles" :key="profile.id">
                         <a
-                            class="dropdown-item"
+                            class="dropdownItem"
                             :class="{ active: profile.id === activeProfileId }"
                             @click.prevent="handleProfileSwitch(profile.id)"
                             href="#"
@@ -36,7 +36,7 @@
                             {{ profile.name }}
                             <i
                                 v-if="profile.id === activeProfileId"
-                                class="bi bi-check-lg ms-2"
+                                class="bi bi-check-lg ms-2 text-white"
                             ></i>
                         </a>
                     </div>
@@ -162,24 +162,3 @@ onMounted(() => {
     }
 })
 </script>
-
-<style scoped>
-.dropdown-item.active {
-    background-color: var(--cui-primary);
-    color: white;
-}
-
-.dropdown-item.active:hover {
-    background-color: var(--cui-primary-dark);
-    color: white;
-}
-
-.bi-check-lg {
-    color: white;
-}
-
-.statusBoxError {
-    background-color: #dc3545 !important;
-    color: white !important;
-}
-</style>

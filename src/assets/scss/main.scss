@@ -1,11 +1,13 @@
 @use 'base';
 @use 'chat';
+@use 'error';
+@use 'loading';
 @use 'markdown';
 @use 'message';
 
 /* CoreUI CSS Variables */
 :root {
-    --header-background: #423d5d;
+    --header-background: #b479cd;
     --cui-primary: #9348e9;
     --cui-primary-rgb: 147, 72, 233;
     --cui-primary-dark: #5219af;

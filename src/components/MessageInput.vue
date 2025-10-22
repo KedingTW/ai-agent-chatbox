@@ -8,7 +8,7 @@
                     v-model="inputValue"
                     :class="textareaClasses"
                     :placeholder="placeholder"
-                    :disabled="chatStore.isStreaming || disabled"
+                    :disabled="chatStore.isStreaming || disabled || !chatStore.canSendMessage"
                     rows="3"
                     @keydown="handleKeyDown"
                     @focus="handleFocus"
@@ -20,6 +20,7 @@
                 <button
                     v-if="!chatStore.isStreaming"
                     :class="sendButtonClasses"
+                    :disabled="!chatStore.canSendMessage"
                     type="submit"
                     :aria-label="sendButtonLabel"
                 >

@@ -7,9 +7,9 @@
         </div>
 
         <!-- Input area -->
-        <div class="chatInputArea px-3 pt-3">
-            <MessageInput @send-message="handleSendMessage" />
-        </div>
+        <MessageInput @send-message="handleSendMessage" />
+
+        <!-- Loading overlay -->
         <LoadingOverlay role="status" aria-label="Initializing chat" />
     </div>
 </template>
@@ -177,80 +177,3 @@ onUnmounted(() => {
     window.removeEventListener('unhandledrejection', handleUnhandledRejection)
 })
 </script>
-
-<style scoped>
-.chatContainer {
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    overflow: hidden;
-    position: relative;
-    height: 100%;
-    min-height: 0;
-}
-
-.chatContainerError {
-    border-color: var(--cui-danger);
-}
-
-.chatContainerInitializing {
-    pointer-events: none;
-}
-
-.chatMain {
-    min-height: 0;
-}
-
-.errorBanner {
-    margin-bottom: 0;
-}
-
-.errorBannerContent {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.chatInputArea {
-    background-color: var(--cui-primary-50);
-}
-
-@keyframes pulse {
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
-@media (max-width: 768px) {
-    .chatInputArea {
-        padding: 0.75rem;
-    }
-
-    .errorBanner {
-        margin: 0.75rem;
-        margin-bottom: 0;
-    }
-}
-
-@media (prefers-contrast: high) {
-    .chatContainer {
-        border-width: 2px;
-    }
-
-    .chatInputArea {
-        border-top-width: 2px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .statusIndicatorConnecting,
-    .statusIndicatorStreaming {
-        animation: none;
-    }
-}
-</style>

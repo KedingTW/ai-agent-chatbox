@@ -408,7 +408,10 @@
         }
     }
 }
-
+.messageInput{
+    padding: 1rem 1rem 0 1rem;
+    background-color: var(--cui-primary-50);
+}
 .messageInputGroup {
     position: relative;
 
@@ -470,12 +473,6 @@
             pointer-events: none;
         }
     }
-}
-
-// 這些樣式可能作用於 .messageInputGroup 或其父級，因此保持獨立，但將變體巢狀化。
-.messageInputDisabled {
-    background-color: var(--cui-gray-50);
-    opacity: 0.7;
 }
 
 .messageInputError {
