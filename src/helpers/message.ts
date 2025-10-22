@@ -1,4 +1,4 @@
-import type { Message, UserMessage, AgentMessage } from "@/types"
+import type { Message, UserMessage, AgentMessage } from '@/types'
 
 // Message type guards
 export function isUserMessage(message: Message): message is UserMessage {

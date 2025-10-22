@@ -134,10 +134,6 @@ const handleMessageRetry = async (messageId: string) => {
     }
 }
 
-const handleCancelStreaming = () => {
-    chatStore.stopStreaming()
-}
-
 // Lifecycle
 onMounted(() => {
     initializeService()

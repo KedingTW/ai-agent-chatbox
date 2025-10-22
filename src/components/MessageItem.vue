@@ -102,26 +102,26 @@ const markdownMode = computed(() => 'light' as const)
 const messageClasses = computed(() => [
     'messageItem',
     {
-        'messageItemUser': isUserMessage.value,
-        'messageItemAgent': isAgentMessage.value,
-        'messageItemStreaming': props.isStreaming && props.message.isStreaming,
-        'messageItemFailed': isMessageFailed.value,
+        messageItemUser: isUserMessage.value,
+        messageItemAgent: isAgentMessage.value,
+        messageItemStreaming: props.isStreaming && props.message.isStreaming,
+        messageItemFailed: isMessageFailed.value,
     },
 ])
 
 const avatarClasses = computed(() => [
     'messageAvatar',
     {
-        'messageAvatarUser': isUserMessage.value,
-        'messageAvatarAgent': isAgentMessage.value,
+        messageAvatarUser: isUserMessage.value,
+        messageAvatarAgent: isAgentMessage.value,
     },
 ])
 
 const avatarIconClasses = computed(() => [
     'messageAvatarIcon',
     {
-        'messageAvatarIconUser': isUserMessage.value,
-        'messageAvatarIconAgent': isAgentMessage.value,
+        messageAvatarIconUser: isUserMessage.value,
+        messageAvatarIconAgent: isAgentMessage.value,
     },
 ])
 
@@ -136,33 +136,33 @@ const contentClasses = computed(() => [
 const bubbleClasses = computed(() => [
     'messageBubble',
     {
-        'messageBubbleUser': isUserMessage.value,
-        'messageBubbleAgent': isAgentMessage.value,
-        'messageBubbleStreaming': props.isStreaming && props.message.isStreaming,
-        'messageBubbleFailed': isMessageFailed.value,
+        messageBubbleUser: isUserMessage.value,
+        messageBubbleAgent: isAgentMessage.value,
+        messageBubbleStreaming: props.isStreaming && props.message.isStreaming,
+        messageBubbleFailed: isMessageFailed.value,
     },
 ])
 
 const textClasses = computed(() => [
     'messageText',
     {
-        'messageTextUser': isUserMessage.value,
-        'messageTextAgent': isAgentMessage.value,
+        messageTextUser: isUserMessage.value,
+        messageTextAgent: isAgentMessage.value,
     },
 ])
 
 const timestampClasses = computed(() => [
     'messageTimestamp',
     {
-        'messageTimestampUser': isUserMessage.value,
-        'messageTimestampAgent': isAgentMessage.value,
+        messageTimestampUser: isUserMessage.value,
+        messageTimestampAgent: isAgentMessage.value,
     },
 ])
 
 const streamingIndicatorClasses = computed(() => [
     'streamingIndicator',
     {
-        'streamingIndicatorVisible': props.isStreaming && props.message.isStreaming,
+        streamingIndicatorVisible: props.isStreaming && props.message.isStreaming,
     },
 ])
 

@@ -44,7 +44,10 @@ export class AWSServiceManager {
             const errorContext: ErrorContext = {
                 type: 'api',
                 code: 'SERVICE_MANAGER_INIT_FAILED',
-                message: error instanceof Error ? error.message : 'Service manager initialization failed',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Service manager initialization failed',
                 timestamp: new Date(),
                 retryable: true,
             }

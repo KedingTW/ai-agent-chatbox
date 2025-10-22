@@ -14,7 +14,12 @@ import type {
     ChatSession,
     ConnectionStatus,
 } from '@/types'
-import { isUserMessage, isAgentMessage, validateMessage, sanitizeMessageContent } from '@/helpers/message'
+import {
+    isUserMessage,
+    isAgentMessage,
+    validateMessage,
+    sanitizeMessageContent,
+} from '@/helpers/message'
 
 export const useChatStore = defineStore('chat', () => {
     // Core state
@@ -62,7 +67,11 @@ export const useChatStore = defineStore('chat', () => {
     )
 
     const canSendMessage = computed(
-        () => isConnected.value && !isWaitingForResponse.value && !error.value && !isInitializing.value,
+        () =>
+            isConnected.value &&
+            !isWaitingForResponse.value &&
+            !error.value &&
+            !isInitializing.value,
     )
 
     // Message management actions

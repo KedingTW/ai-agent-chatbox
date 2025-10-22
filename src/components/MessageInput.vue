@@ -99,11 +99,6 @@ const canSend = computed(() => {
     return result
 })
 
-const sendButtonText = computed(() => {
-    if (!chatStore.canSendMessage) return ''
-    return '📤'
-})
-
 const placeholder = computed(() => {
     if (chatStore.isInitializing) return '連線中...'
     if (!chatStore.isConnected) return '已斷線'
@@ -121,9 +116,9 @@ const sendButtonLabel = computed(() => {
 const containerClasses = computed(() => [
     'messageInput',
     {
-        'messageInputDisabled': !chatStore.canSendMessage,
-        'messageInputFocused': isFocused.value,
-        'messageInputError': !!errorMessage.value,
+        messageInputDisabled: !chatStore.canSendMessage,
+        messageInputFocused: isFocused.value,
+        messageInputError: !!errorMessage.value,
     },
 ])
 
@@ -132,16 +127,16 @@ const textareaClasses = computed(() => [
     'messageInputTextarea',
     {
         'is-invalid': !!errorMessage.value,
-        'messageInputTextareaMultiline': props.multiline,
-        'messageInputTextareaSingle': !props.multiline,
+        messageInputTextareaMultiline: props.multiline,
+        messageInputTextareaSingle: !props.multiline,
     },
 ])
 
 const sendButtonClasses = computed(() => [
     'messageInputSendBtn',
     {
-        'canSend': canSend.value,
-        'noSend': !canSend.value,
+        canSend: canSend.value,
+        noSend: !canSend.value,
     },
 ])
 

@@ -8,7 +8,7 @@
 export function isInIframe(): boolean {
     try {
         return window.self !== window.top
-    } catch (e) {
+    } catch {
         // 如果無法訪問 window.top，通常表示在 iframe 中
         return true
     }
@@ -96,13 +96,14 @@ export function getIframeConfig(): {
     // 如果是 iframe 模式且沒有指定設定檔，拋出錯誤
     if (isIframe && !profileId) {
         throw new IframeConfigError(
-            `iframe 模式下必須指定設定檔。請在 URL 中添加 profile 參數，例如：${generateSuggestedUrl()}`
+            `iframe 模式下必須指定設定檔。請在 URL 中添加 profile 參數，例如：${generateSuggestedUrl()}`,
         )
     }
 
     // 在 iframe 模式下預設隱藏選單，除非明確指定不隱藏
     const urlParams = new URLSearchParams(window.location.search)
-    const showMenu = ['true'].includes(urlParams.get('showMenu') || '') ||
+    const showMenu =
+        ['true'].includes(urlParams.get('showMenu') || '') ||
         ['true'].includes(urlParams.get('menu') || '')
     const hideMenu = isIframe && !showMenu
 
@@ -120,8 +121,8 @@ export function getIframeConfig(): {
 const PROFILE_ID_MAP: Record<string, string> = {
     '1': 'profile1',
     '2': 'profile2',
-    'profile1': 'profile1',
-    'profile2': 'profile2',
+    profile1: 'profile1',
+    profile2: 'profile2',
 }
 
 /**
@@ -159,7 +160,7 @@ export function getNormalizedIframeConfig(): {
     // 如果是 iframe 模式且標準化後的設定檔 ID 無效，拋出錯誤
     if (config.isIframe && !isValidProfileId(normalizedProfileId)) {
         throw new IframeConfigError(
-            `無效的設定檔 ID: ${config.profileId}。支援的設定檔：profile1, profile2, 1, 2。建議 URL：${generateSuggestedUrl()}`
+            `無效的設定檔 ID: ${config.profileId}。支援的設定檔：profile1, profile2, 1, 2。建議 URL：${generateSuggestedUrl()}`,
         )
     }
 
@@ -186,20 +187,20 @@ export function safeGetIframeConfig(): {
         const config = getNormalizedIframeConfig()
         return {
             success: true,
-            config
+            config,
         }
     } catch (error) {
         if (error instanceof IframeConfigError) {
             return {
                 success: false,
                 error: error.message,
-                suggestedUrl: generateSuggestedUrl()
+                suggestedUrl: generateSuggestedUrl(),
             }
         }
 
         return {
             success: false,
-            error: '獲取 iframe 配置時發生未知錯誤'
+            error: '獲取 iframe 配置時發生未知錯誤',
         }
     }
 }

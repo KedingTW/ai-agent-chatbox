@@ -6,22 +6,31 @@ import type { AWSProfile } from '@/types/aws'
 export const useConfigStore = defineStore('config', () => {
     // iframe 配置 - 使用安全的方式獲取
     const iframeConfigResult = safeGetIframeConfig()
-    const iframeConfig = iframeConfigResult.success ? iframeConfigResult.config! : {
-        isIframe: false,
-        profileId: null,
-        hideMenu: false
-    }
+    const iframeConfig = iframeConfigResult.success
+        ? iframeConfigResult.config!
+        : {
+              isIframe: false,
+              profileId: null,
+              hideMenu: false,
+          }
 
     // 根據 iframe 配置決定初始設定檔
     const getInitialProfileId = (): string | null => {
         // 如果 iframe 配置失敗或是 iframe 模式但沒有有效設定檔，不提供設定檔
-        if (!iframeConfigResult.success ||
-            (iframeConfig.isIframe && (!iframeConfig.profileId || !isValidProfileId(iframeConfig.profileId)))) {
+        if (
+            !iframeConfigResult.success ||
+            (iframeConfig.isIframe &&
+                (!iframeConfig.profileId || !isValidProfileId(iframeConfig.profileId)))
+        ) {
             return null
         }
 
         // 如果是 iframe 模式且有有效設定檔
-        if (iframeConfig.isIframe && iframeConfig.profileId && isValidProfileId(iframeConfig.profileId)) {
+        if (
+            iframeConfig.isIframe &&
+            iframeConfig.profileId &&
+            isValidProfileId(iframeConfig.profileId)
+        ) {
             return iframeConfig.profileId
         }
 

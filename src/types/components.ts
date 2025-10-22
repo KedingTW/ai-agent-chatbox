@@ -3,10 +3,10 @@
  */
 
 import type { Message } from './aws'
-import type { BaseComponentProps, EventHandler } from '@/types'
+import type { EventHandler } from '@/types'
 
 // Message component props
-export interface MessageItemProps extends BaseComponentProps {
+export interface MessageItemProps {
     message: Message
     isStreaming?: boolean
     showTimestamp?: boolean
@@ -15,13 +15,13 @@ export interface MessageItemProps extends BaseComponentProps {
 }
 
 // Message list component props
-export interface MessageListProps extends BaseComponentProps {
+export interface MessageListProps {
     messages: Message[]
     isStreaming?: boolean
 }
 
 // Message input component props
-export interface MessageInputProps extends BaseComponentProps {
+export interface MessageInputProps {
     disabled?: boolean
     placeholder?: string
     maxLength?: number
@@ -29,7 +29,7 @@ export interface MessageInputProps extends BaseComponentProps {
 }
 
 // Loading overlay component props
-export interface LoadingOverlayProps extends BaseComponentProps {
+export interface LoadingOverlayProps {
     isVisible: boolean
     ariaLabel?: string
 }

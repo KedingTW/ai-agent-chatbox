@@ -2,8 +2,7 @@
  * AWS Configuration utilities
  */
 
-import type { AWSProfile } from "@/types/aws"
-
+import type { AWSProfile } from '@/types/aws'
 
 /**
  * 取得特定設定檔的 AWS 憑證配置

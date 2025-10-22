@@ -21,14 +21,10 @@ export type {
 } from './aws'
 
 // Utility types
-export type { Result, EventHandler, BaseComponentProps } from './utils'
+export type { Result, EventHandler } from './utils'
 
 // Component types
-export type {
-    MessageItemProps,
-    MessageListProps,
-    MessageInputProps,
-} from './components'
+export type { MessageItemProps, MessageListProps, MessageInputProps } from './components'
 
 // Type guards and validation utilities
 export {
