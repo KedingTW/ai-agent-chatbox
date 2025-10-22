@@ -16,15 +16,15 @@
             <!-- Streaming indicator -->
             <div
                 v-if="isStreaming"
-                class="streamingIndicator d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
+                class="streamingStatus d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
                 role="status"
                 aria-live="polite"
             >
-                <div class="streamingIndicatorContent">
-                    <span class="streamingIndicator__icon">
+                <div class="streamingStatusContent">
+                    <span class="streamingStatus__icon">
                         <span class="spinner-border spinner-border-sm"></span>
                     </span>
-                    <span class="streamingIndicatorText">AI is thinking...</span>
+                    <span class="streamingStatusText">AI is thinking...</span>
                 </div>
                 <button
                     class="btn btn-sm btn-outline-secondary"
@@ -245,18 +245,18 @@ onUnmounted(() => {
     background-color: var(--cui-primary-50);
 }
 
-.streamingIndicator {
+.streamingStatus {
     background-color: rgba(var(--cui-info-rgb), 0.1);
     border: 1px solid rgba(var(--cui-info-rgb), 0.2);
 }
 
-.streamingIndicatorContent {
+.streamingStatusContent {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.streamingIndicatorText {
+.streamingStatusText {
     font-size: 0.875rem;
     color: var(--cui-info);
     font-style: italic;
@@ -283,7 +283,7 @@ onUnmounted(() => {
         margin-bottom: 0;
     }
 
-    .streamingIndicator {
+    .streamingStatus {
         margin-bottom: 0.75rem;
         padding: 0.75rem;
     }
