@@ -99,15 +99,23 @@
         }
     }
 }
-.dropdownItem.active {
-    background-color: var(--cui-primary);
-    color: white;
+.dropdownItem{
+    width: 100%;
+    display: flex;
+    text-decoration: none;
+    color: var(--header-background);
+    padding: 0.5rem 1rem;
+    &.active {
+        background-color: var(--header-background);
+        color: white;
+    }
+    &:hover {
+        background-color: var(--cui-primary);
+        color: white;
+    }
 }
 
-.dropdownItem.active:hover {
-    background-color: var(--cui-primary-dark);
-    color: white;
-}
+.dropdownItem.active
 
 .statusBoxError {
     background-color: #dc3545 !important;
