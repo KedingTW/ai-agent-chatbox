@@ -27,19 +27,3 @@ withDefaults(defineProps<LoadingOverlayProps>(), {
 
 const chatStore = useChatStore()
 </script>
-
-<style scoped>
-.loading-overlay {
-    z-index: 1000;
-}
-
-.loadingOverlayContent {
-    text-align: center;
-}
-
-.loadingOverlayText {
-    margin-top: 1rem;
-    color: var(--cui-gray-600);
-    font-size: 0.875rem;
-}
-</style>
