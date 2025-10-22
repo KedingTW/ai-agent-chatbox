@@ -2,7 +2,7 @@
  * Type guards and validation utilities
  */
 
-import type { Message, UserMessage, AgentMessage, AWSError, ErrorContext, AWSConfig } from './aws'
+import type { Message, UserMessage, AgentMessage, AWSError, ErrorContext } from './aws'
 
 // Message type guards
 export function isUserMessage(message: Message): message is UserMessage {
