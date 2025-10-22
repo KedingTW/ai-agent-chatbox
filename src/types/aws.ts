@@ -2,10 +2,16 @@
  * AWS Bedrock Agent Runtime types and interfaces
  */
 
-export interface AWSConfig {
+export interface AWSProfile {
+    id: string
+    name: string
+    title: string
+    accessKeyId: string
+    secretAccessKey: string
     region: string
-    agentArn: string
+    bedrockAgentArn: string
     sessionId: string
+    description: string
 }
 
 export interface Message {

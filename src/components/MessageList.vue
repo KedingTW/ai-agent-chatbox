@@ -43,7 +43,7 @@
                 v-for="message in messages"
                 :key="message.id"
                 :message="message"
-                :is-streaming="isStreaming && message.id === currentStreamingMessageId"
+                :is-streaming="chatStore.messages && message.id === currentStreamingMessageId"
                 @retry="handleMessageRetry"
             />
         </div>
@@ -54,8 +54,10 @@
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import type { MessageListProps } from '@/types'
 import MessageItem from './MessageItem.vue'
-import { useConfigStore } from '@/stores/chat'
+import { useChatStore } from '@/stores/chat'
+import { useConfigStore } from '@/stores/config'
 
+const chatStore = useChatStore()
 const configStore = useConfigStore()
 const activeProfile = computed(() => configStore.activeProfile)
 const displayDesc = computed(() => {
@@ -63,10 +65,7 @@ const displayDesc = computed(() => {
     return activeProfile.value?.description || 'AI Assistant'
 })
 // Props
-const props = withDefaults(defineProps<MessageListProps>(), {
-    isStreaming: false,
-    autoScroll: true,
-})
+const props = withDefaults(defineProps<MessageListProps>(), {})
 
 // Emits
 const emit = defineEmits<{
@@ -88,8 +87,8 @@ const hasMessages = computed(() => props.messages.length > 0)
 const containerClasses = computed(() => [
     'messageList',
     {
-        'messageListEmpty': !hasMessages.value,
-        'messageListStreaming': props.isStreaming,
+        messageListEmpty: !hasMessages.value,
+        messageListStreaming: props.isStreaming,
     },
 ])
 
@@ -130,7 +129,7 @@ const handleMessageRetry = (messageId: string) => {
 watch(
     () => props.messages.length,
     async (newLength, oldLength) => {
-        if (newLength > oldLength && props.autoScroll) {
+        if (newLength > oldLength) {
             await nextTick()
             scrollToBottom(true)
         }
@@ -141,7 +140,7 @@ watch(
 watch(
     () => props.isStreaming,
     async (isStreaming) => {
-        if (isStreaming && props.autoScroll) {
+        if (isStreaming) {
             await nextTick()
             scrollToBottom(false) // Don't animate during streaming for better performance
         }
@@ -161,26 +160,24 @@ watch(
 watch(
     // 當AI回復完成後，要滾至最下方
     () => {
-        const lastMessage = props.messages[props.messages.length - 1];
+        const lastMessage = props.messages[props.messages.length - 1]
         // 我們只需要追蹤 AI agent 的訊息完成狀態
         if (lastMessage && lastMessage.sender === 'agent') {
-            return lastMessage.isComplete;
+            return lastMessage.isComplete
         }
-        return null; // 非 AI 訊息或無訊息時不追蹤
+        return null // 非 AI 訊息或無訊息時不追蹤
     },
     async (isCompletedNow, wasCompletedBefore) => {
         // 條件判斷：
         // 1. 新狀態是已完成 (isCompletedNow === true)
         // 2. 舊狀態是未完成或不存在 (wasCompletedBefore !== true)
-        // 3. 必須開啟 autoScroll
-        if (isCompletedNow === true && wasCompletedBefore !== true && props.autoScroll) {
-
+        if (isCompletedNow === true && wasCompletedBefore !== true) {
             // AI 回覆完成，強制滾動到底部 (可以使用動畫)
-            await nextTick();
-            scrollToBottom(true);
+            await nextTick()
+            scrollToBottom(true)
         }
-    }
-);
+    },
+)
 
 // Intersection Observer for auto-scroll optimization
 let intersectionObserver: IntersectionObserver | null = null
@@ -208,7 +205,7 @@ onMounted(() => {
     }
 
     // Initial scroll to bottom
-    if (hasMessages.value && props.autoScroll) {
+    if (hasMessages.value) {
         nextTick(() => scrollToBottom(false))
     }
 })

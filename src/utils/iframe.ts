@@ -34,7 +34,7 @@ function getProfileFromParams(params: URLSearchParams): string | null {
  * 從 URL 參數中獲取設定檔 ID
  * 支援的參數名稱：profile, profileId, p
  */
-export function getProfileFromUrl(): string | null {
+export function getProfileIdFromUrl(): string | null {
     const urlParams = new URLSearchParams(window.location.search)
     return getProfileFromParams(urlParams)
 }
@@ -43,7 +43,7 @@ export function getProfileFromUrl(): string | null {
  * 從 URL hash 中獲取設定檔 ID
  * 例如：#profile=profile1 或 #profile1
  */
-export function getProfileFromHash(): string | null {
+export function getProfileIdFromHash(): string | null {
     const hash = window.location.hash.substring(1) // 移除 #
 
     if (!hash) return null
@@ -87,11 +87,11 @@ export function getIframeConfig(): {
     hideMenu: boolean
 } {
     const isIframe = isInIframe()
-    const profileFromUrl = getProfileFromUrl()
-    const profileFromHash = getProfileFromHash()
+    const profileIdFromUrl = getProfileIdFromUrl()
+    const profileIdFromHash = getProfileIdFromHash()
 
     // 優先使用 URL 參數，其次使用 hash
-    let profileId = profileFromUrl || profileFromHash
+    const profileId = profileIdFromUrl || profileIdFromHash
 
     // 如果是 iframe 模式且沒有指定設定檔，拋出錯誤
     if (isIframe && !profileId) {

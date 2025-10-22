@@ -4,8 +4,9 @@
  */
 
 import { AWSBedrockService } from './aws-bedrock'
-import { useConfigStore, type AWSProfile } from '@/stores/chat'
-import type { AWSConfig, ErrorContext, Result } from '@/types'
+import { useConfigStore } from '@/stores/config'
+import type { ErrorContext, Result } from '@/types'
+import type { AWSProfile } from '@/types/aws'
 
 export class AWSServiceManager {
     private static instance: AWSServiceManager | null = null
@@ -75,15 +76,8 @@ export class AWSServiceManager {
             // 釋放現有服務
             this.dispose()
 
-            // 從設定檔建立 AWS 配置
-            const awsConfig: AWSConfig = {
-                region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-                agentArn: profile.bedrockAgentArn,
-                sessionId: profile.sessionId,
-            }
-
             // 使用設定檔特定配置和憑證初始化新的 Bedrock 服務
-            this.bedrockService = new AWSBedrockService(awsConfig, profile)
+            this.bedrockService = new AWSBedrockService(profile)
 
             // 等待服務準備就緒
             const isReady = await this.bedrockService.isReady()
@@ -170,26 +164,6 @@ export class AWSServiceManager {
             this.bedrockService = null
         }
         this.currentProfileId = null
-    }
-
-    /**
-     * 取得服務狀態資訊
-     */
-    async getStatus(): Promise<{
-        isInitialized: boolean
-        currentProfile: string | null
-        servicesReady: boolean
-        connectionStatus: any
-    }> {
-        const isReady = await this.isReady()
-        const connectionStatus = this.bedrockService?.getConnectionStatus() || null
-
-        return {
-            isInitialized: this.bedrockService !== null,
-            currentProfile: this.currentProfileId,
-            servicesReady: isReady,
-            connectionStatus,
-        }
     }
 }
 

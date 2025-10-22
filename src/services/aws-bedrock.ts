@@ -10,42 +10,28 @@ import {
     type InvokeAgentRuntimeCommandOutput,
 } from '@aws-sdk/client-bedrock-agentcore'
 import type {
-    AWSConfig,
     ErrorContext,
     SendMessageResponse,
     ConnectionStatus,
     Result,
     StreamEvent,
 } from '@/types'
-import { isValidAWSConfig, classifyError, assertIsAWSConfig } from '@/types'
-import {
-    loadAWSConfig,
-    validateAWSConfig,
-    getAWSCredentialsConfig,
-    validateAWSCredentials,
-    loadAWSConfigFromProfile,
-    getAWSCredentialsConfigFromProfile,
-} from '@/config/aws'
-import type { AWSProfile } from '@/stores/chat'
+import { classifyError } from '@/types'
+import { getAWSCredentialsConfigFromProfile } from '@/config/aws'
+import type { AWSProfile } from '@/types/aws'
 
 export class AWSBedrockService {
     private client: BedrockAgentCoreClient | null = null
-    private config: AWSConfig
     private connectionStatus: ConnectionStatus
     private initializationPromise: Promise<void> | null = null
-    private profile: AWSProfile | null = null
+    private profile: AWSProfile
 
-    constructor(customConfig?: Partial<AWSConfig>, profile?: AWSProfile) {
+    constructor(profile: AWSProfile) {
+        if (!profile) {
+            throw new Error('Profile iss not found.')
+        }
         // 確認是否有選擇設定檔
         this.profile = profile || null
-
-        // Load and validate configuration
-        if (profile) {
-            // 若有設定檔,則載入該設定檔
-            this.config = customConfig ? { ...loadAWSConfigFromProfile(profile), ...customConfig } : loadAWSConfigFromProfile(profile)
-        } else {
-            this.config = customConfig ? { ...loadAWSConfig(), ...customConfig } : loadAWSConfig()
-        }
 
         // Initialize connection status
         this.connectionStatus = {
@@ -55,37 +41,8 @@ export class AWSBedrockService {
             latency: null,
         }
 
-        // Validate configuration
-        this.validateConfiguration()
-
         // Initialize client asynchronously
         this.initializationPromise = this.initializeClient()
-    }
-
-    /**
-     * Validate AWS configuration and credentials
-     */
-    private validateConfiguration(): void {
-        try {
-            // Validate configuration structure
-            assertIsAWSConfig(this.config)
-
-            if (!validateAWSConfig(this.config)) {
-                throw new Error('AWS configuration validation failed')
-            }
-
-            // Validate credentials
-            const credentialsValidation = validateAWSCredentials()
-            if (!credentialsValidation.isValid) {
-                throw new Error(
-                    `AWS credentials validation failed: ${credentialsValidation.errors.join(', ')}`,
-                )
-            }
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : 'Invalid AWS configuration'
-            throw new Error(`AWS Bedrock Service initialization failed: ${errorMessage}`)
-        }
     }
 
     /**
@@ -93,13 +50,14 @@ export class AWSBedrockService {
      */
     private async initializeClient(): Promise<void> {
         try {
+            if (!this.profile) {
+                throw new Error('Profile is not initialized')
+            }
             // 根據設定檔（Profile）或預設值（Default）取得憑證配置
-            const credentialsConfig = this.profile
-                ? getAWSCredentialsConfigFromProfile(this.profile)
-                : getAWSCredentialsConfig()
+            const credentialsConfig = getAWSCredentialsConfigFromProfile(this.profile)
 
             this.client = new BedrockAgentCoreClient({
-                region: this.config.region,
+                region: this.profile.region,
                 ...credentialsConfig,
                 maxAttempts: 3,
                 requestHandler: {
@@ -143,13 +101,6 @@ export class AWSBedrockService {
         } else if (updates.isConnected === false) {
             this.connectionStatus.connectionAttempts++
         }
-    }
-
-    /**
-     * Get current AWS configuration
-     */
-    getConfig(): AWSConfig {
-        return { ...this.config }
     }
 
     /**
@@ -202,36 +153,6 @@ export class AWSBedrockService {
     }
 
     /**
-     * Update configuration and reinitialize client
-     */
-    async updateConfig(newConfig: Partial<AWSConfig>): Promise<Result<boolean, ErrorContext>> {
-        try {
-            const updatedConfig = { ...this.config, ...newConfig }
-
-            // Validate new configuration
-            if (!isValidAWSConfig(updatedConfig)) {
-                throw new Error('Invalid configuration provided')
-            }
-
-            this.config = updatedConfig
-            return await this.reconnect()
-        } catch (error) {
-            const errorContext: ErrorContext = {
-                type: 'validation',
-                code: 'CONFIG_UPDATE_FAILED',
-                message: error instanceof Error ? error.message : 'Configuration update failed',
-                timestamp: new Date(),
-                retryable: false,
-            }
-
-            return {
-                success: false,
-                error: errorContext,
-            }
-        }
-    }
-
-    /**
      * Get the initialized client (for internal use)
      */
     async getClient(): Promise<BedrockAgentCoreClient> {
@@ -256,8 +177,8 @@ export class AWSBedrockService {
      */
     private createInvokeAgentRuntimeCommand(message: string): InvokeAgentRuntimeCommandInput {
         const commandInput = {
-            runtimeSessionId: this.config.sessionId,
-            agentRuntimeArn: this.config.agentArn,
+            runtimeSessionId: this.profile.sessionId,
+            agentRuntimeArn: this.profile.bedrockAgentArn,
             qualifier: 'DEFAULT', // Optional
             payload: new TextEncoder().encode(JSON.stringify({ prompt: message })), // Convert string to Uint8Array
         }
@@ -330,11 +251,14 @@ export class AWSBedrockService {
 
             const duration = Date.now() - startTime
             this.updateConnectionStatus({ latency: duration })
+            console.log('runtimeSessionId', response.runtimeSessionId)
+            console.log('sessionId', sessionId)
+            console.log('profile.sessionId', this.profile.sessionId)
 
             return {
                 success: true,
                 messageId,
-                sessionId: response.runtimeSessionId || sessionId || this.config.sessionId,
+                sessionId: response.runtimeSessionId || sessionId || this.profile.sessionId,
                 duration,
                 streamingResponse: response.response,
             }
@@ -588,6 +512,7 @@ export class AWSBedrockService {
      * Get user-friendly error message
      */
     private getErrorMessage(error: unknown): string {
+        console.error(error)
         if (error instanceof Error) {
             // Map common AWS errors to user-friendly messages
             if (

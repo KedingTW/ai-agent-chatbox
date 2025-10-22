@@ -10,17 +10,11 @@ declare global {
             AWS_ACCESS_KEY_ID?: string
             AWS_SECRET_ACCESS_KEY?: string
             AWS_SESSION_TOKEN?: string
-            AWS_REGION?: string
 
             // AWS Bedrock配置
             AWS_BEDROCK_AGENT_ID?: string
             AWS_BEDROCK_AGENT_ALIAS_ID?: string
             AWS_BEDROCK_SESSION_ID?: string
-
-            // CDK配置
-            CDK_DEFAULT_ACCOUNT?: string
-            CDK_DEFAULT_REGION?: string
-            AWS_BRANCH?: string
 
             // Node.js环境
             NODE_ENV?: 'development' | 'production' | 'test'
@@ -28,4 +22,4 @@ declare global {
     }
 }
 
-export {}
+export { }

@@ -3,40 +3,11 @@
         <!-- Main chat area -->
         <div class="chatMain flex-grow-1 d-flex flex-column overflow-hidden">
             <!-- Message list -->
-            <MessageList
-                :messages="messages"
-                :is-streaming="isStreaming"
-                :auto-scroll="true"
-                @message-retry="handleMessageRetry"
-            />
+            <MessageList :messages="messages" @message-retry="handleMessageRetry" />
         </div>
 
         <!-- Input area -->
         <div class="chatInputArea px-3 pt-3">
-            <!-- Streaming indicator -->
-            <div
-                v-if="isStreaming"
-                class="streamingStatus d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
-                role="status"
-                aria-live="polite"
-            >
-                <div class="streamingStatusContent">
-                    <span class="streamingStatus__icon">
-                        <span class="spinner-border spinner-border-sm"></span>
-                    </span>
-                    <span class="streamingStatusText">AI is thinking...</span>
-                </div>
-                <button
-                    class="btn btn-sm btn-outline-secondary"
-                    @click="handleCancelStreaming"
-                    type="button"
-                    aria-label="Cancel current response"
-                >
-                    Cancel
-                </button>
-            </div>
-
-            <!-- Message input -->
             <MessageInput @send-message="handleSendMessage" />
         </div>
         <LoadingOverlay role="status" aria-label="Initializing chat" />
@@ -58,7 +29,6 @@ const chatStore = useChatStore()
 
 // Computed properties from store
 const messages = computed(() => chatStore.messages)
-const isStreaming = computed(() => chatStore.isStreaming)
 const canSendMessage = computed(() => chatStore.canSendMessage)
 
 // CSS Class functions
@@ -169,8 +139,8 @@ const handleCancelStreaming = () => {
 }
 
 // Lifecycle
-onMounted(async () => {
-    await initializeService()
+onMounted(() => {
+    initializeService()
 })
 
 onUnmounted(() => {
@@ -245,23 +215,6 @@ onUnmounted(() => {
     background-color: var(--cui-primary-50);
 }
 
-.streamingStatus {
-    background-color: rgba(var(--cui-info-rgb), 0.1);
-    border: 1px solid rgba(var(--cui-info-rgb), 0.2);
-}
-
-.streamingStatusContent {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.streamingStatusText {
-    font-size: 0.875rem;
-    color: var(--cui-info);
-    font-style: italic;
-}
-
 @keyframes pulse {
     0%,
     100% {
@@ -281,11 +234,6 @@ onUnmounted(() => {
     .errorBanner {
         margin: 0.75rem;
         margin-bottom: 0;
-    }
-
-    .streamingStatus {
-        margin-bottom: 0.75rem;
-        padding: 0.75rem;
     }
 }
 

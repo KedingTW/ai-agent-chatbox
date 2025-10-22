@@ -15,10 +15,7 @@
         <div class="col-3 col-md-4 chatHeaderMenu">
             <!-- Status、Menu -->
             <div class="chatStatus">
-                <span
-                    :class="getStatusIndicatorClass"
-                    class="statusBox"
-                >
+                <span :class="getStatusIndicatorClass" class="statusBox">
                     {{ connectionStatusText }}
                 </span>
             </div>
@@ -37,7 +34,10 @@
                             style="cursor: pointer"
                         >
                             {{ profile.name }}
-                            <i v-if="profile.id === activeProfileId" class="bi bi-check-lg ms-2"></i>
+                            <i
+                                v-if="profile.id === activeProfileId"
+                                class="bi bi-check-lg ms-2"
+                            ></i>
                         </a>
                     </div>
                 </CDropdownMenu>
@@ -48,7 +48,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useChatStore, useConfigStore } from '@/stores/chat'
+import { useChatStore } from '@/stores/chat'
+import { useConfigStore } from '@/stores/config'
 import { awsServiceManager } from '@/services/aws-service-manager'
 import { safeGetIframeConfig } from '@/utils/iframe'
 

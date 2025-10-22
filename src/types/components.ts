@@ -3,7 +3,7 @@
  */
 
 import type { Message, ErrorContext } from './aws'
-import type { BaseComponentProps, EventHandler } from './utils'
+import type { BaseComponentProps, EventHandler } from '@/types'
 
 // Message component props
 export interface MessageItemProps extends BaseComponentProps {
@@ -18,7 +18,6 @@ export interface MessageItemProps extends BaseComponentProps {
 export interface MessageListProps extends BaseComponentProps {
     messages: Message[]
     isStreaming?: boolean
-    autoScroll?: boolean
 }
 
 // Message input component props
@@ -82,11 +81,6 @@ export interface MessageInputExpose {
     clear: () => void
     getValue: () => string
     setValue: (value: string) => void
-}
-
-export interface MessageListExpose {
-    scrollToBottom: (smooth?: boolean) => Promise<void>
-    isAtBottom: () => boolean
 }
 
 // UI state types
