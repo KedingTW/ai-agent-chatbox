@@ -55,7 +55,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useStateStore } from '@/stores/state'
-import Swal from 'sweetalert2'
+import { popMsgHelper } from '@/helpers/common'
 
 const configStore = useConfigStore()
 const chatStore = useChatStore()
@@ -99,16 +99,14 @@ const startNewChat = async () => {
         return // 如果沒有訊息，不需要確認
     }
 
-    const result = await Swal.fire({
+    const result = await popMsgHelper({
+        status: 'confirm',
         title: '開始新聊天',
-        text: '確定要開始新聊天嗎？這將清除所有聊天記錄。',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: '確定',
-        cancelButtonText: '取消',
-        reverseButtons: true,
+        msg: '確定要開始新聊天嗎？這將清除所有聊天記錄。',
+        btnInfo: {
+            confirmBtnText: '確定',
+            discardBtnText: '取消',
+        },
     })
 
     if (result.isConfirmed) {
