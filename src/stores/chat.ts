@@ -339,6 +339,33 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
+    // Enhanced clear messages that also clears persistence
+    const clearAllData = (): void => {
+        // Clear messages and errors
+        clearMessages()
+        clearError()
+
+        // Reset streaming status but keep connection
+        updateStreamingStatus({
+            state: 'idle',
+            messageId: null,
+            progress: 0,
+            error: null,
+        })
+
+        // Create new session (without clearing messages again)
+        currentSession.value = {
+            id: `session_${Date.now()}`,
+            startTime: new Date(),
+            lastActivity: new Date(),
+            messageCount: 0,
+            isActive: true,
+        }
+
+        // Clear persisted data
+        clearPersistedState()
+    }
+
     return {
         // State
         messages,
@@ -394,5 +421,6 @@ export const useChatStore = defineStore('chat', () => {
 
         // Utility actions
         resetState,
+        clearAllData,
     }
 })
