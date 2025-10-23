@@ -22,6 +22,7 @@ import {
 import { AWSBedrockService } from '@/services/aws-bedrock'
 import { useConfigStore } from './config'
 import { useStateStore } from './state'
+import { clearPersistedState } from './plugins/persistence'
 
 export const useChatStore = defineStore('chat', () => {
     // 使用 state store 的全域狀態
