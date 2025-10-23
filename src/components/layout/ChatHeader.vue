@@ -2,26 +2,33 @@
     <div class="row chatHeader">
         <div class="col-12 col-md-4 chatHeaderLogo">
             <!-- Logo -->
-            <img
-                src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
-                alt="Logo"
-                class="chatHeaderLogoImg"
-            />
+            <img src="/images/KDlogo.png" alt="Logo" class="chatHeaderLogoImg" />
+            <!-- 開發模式 -->
+            <span class="badge text-bg-warning mx-2" v-if="environment == 'dev'">{{
+                environment
+            }}</span>
+            <!-- 測試模式 -->
+            <span class="badge text-bg-success mx-2" v-if="environment == 'beta'">{{
+                environment
+            }}</span>
         </div>
-        <div class="col-9 col-md-4 chatHeaderTitle">
+        <div class="col-6 col-md-4 chatHeaderTitle">
             <!-- Title -->
             <h2 class="tt">{{ displayTitle }}</h2>
         </div>
-        <div class="col-3 col-md-4 chatHeaderMenu">
+        <div class="col-6 col-md-4 chatHeaderMenu">
+            <!-- startNewChat、Menu -->
             <!-- Status、Menu -->
             <div class="chatStatus">
-                <CButton color="primary" @click="startNewChat" title="開始新聊天">
-                    <span class="me-1"><i class="bi bi-plus-circle-dotted"></i></span>
-                    新聊天
-                </CButton>
                 <span :class="getStatusIndicatorClass" class="statusBox">
                     {{ connectionStatusText }}
                 </span>
+                <CButton color="primary" @click="startNewChat" title="開始新聊天">
+                    <span class="me-1" v-if="!isMobile"
+                        ><i class="bi bi-plus-circle-dotted"></i
+                    ></span>
+                    新聊天
+                </CButton>
             </div>
             <!-- 只在非 iframe 模式或允許顯示選單時顯示設定檔切換選單 -->
             <CDropdown v-if="shouldShowMenu" variant="nav-item" dark>
@@ -55,15 +62,19 @@ import { computed, onMounted, ref } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useStateStore } from '@/stores/state'
-import Swal from 'sweetalert2'
+import { popMsgHelper, useMobileHelper } from '@/helpers/common'
 
 const configStore = useConfigStore()
 const chatStore = useChatStore()
 const stateStore = useStateStore()
+const { isMobile } = useMobileHelper()
 
 // iframe 配置錯誤狀態
 const iframeConfigError = ref<string | null>(null)
 const hasValidIframeConfig = ref(true)
+
+// 環境變數
+const environment = ref(import.meta.env.VITE_ENVIRONMENT)
 
 // 設定檔管理 - 保持響應性，不要解構
 const profiles = computed(() => configStore.profiles)
@@ -99,16 +110,14 @@ const startNewChat = async () => {
         return // 如果沒有訊息，不需要確認
     }
 
-    const result = await Swal.fire({
+    const result = await popMsgHelper({
+        status: 'confirm',
         title: '開始新聊天',
-        text: '確定要開始新聊天嗎？這將清除所有聊天記錄。',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: '確定',
-        cancelButtonText: '取消',
-        reverseButtons: true,
+        msg: '確定要開始新聊天嗎？這將清除所有聊天記錄。',
+        btnInfo: {
+            confirmBtnText: '確定',
+            discardBtnText: '取消',
+        },
     })
 
     if (result.isConfirmed) {

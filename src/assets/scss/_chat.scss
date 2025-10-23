@@ -6,9 +6,13 @@
 }
 .chatHeaderLogo {
     display: flex;
-    align-items: center;
+    align-items: end;
     justify-content: flex-start;
     padding: 0;
+    @media (max-width: 768px) {
+        justify-content: space-between;
+        align-items: center;
+    }
     .chatHeaderLogoImg {
         height: 40px;
         width: auto;
@@ -21,20 +25,14 @@
     @media (max-width: 768px) {
         padding: 0;
     }
-    // 切換按紐
-    .changeMenu {
-        color: #fff !important;
-        display: flex;
-        padding: 10px;
-        @media (max-width: 768px) {
-            padding: 0 5px;
-        }
-    }
     // 狀態
     .chatStatus {
         display: flex;
         gap: 0.5rem;
         align-items: center;
+        @media (max-width: 768px) {
+            gap: 0;
+        }
         .statusBox {
             padding: 2px 10px;
             border-radius: 10px;
@@ -56,7 +54,7 @@
                     background-color: var(--cui-success);
                 }
             }
-            &.statusBoxDisconnected {
+            &.statusBoxError {
                 &:before {
                     background-color: var(--cui-danger);
                 }
@@ -73,6 +71,15 @@
                     animation: pulse 1s infinite;
                 }
             }
+        }
+    }
+    // 切換按紐
+    .changeMenu {
+        color: #fff !important;
+        display: flex;
+        padding: 10px;
+        @media (max-width: 768px) {
+            padding: 0 5px;
         }
     }
 
