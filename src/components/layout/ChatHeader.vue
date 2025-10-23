@@ -15,6 +15,10 @@
         <div class="col-3 col-md-4 chatHeaderMenu">
             <!-- Status、Menu -->
             <div class="chatStatus">
+                <CButton color="primary" @click="startNewChat" title="開始新聊天">
+                    <span class="me-1"><i class="bi bi-plus-circle-dotted"></i></span>
+                    新聊天
+                </CButton>
                 <span :class="getStatusIndicatorClass" class="statusBox">
                     {{ connectionStatusText }}
                 </span>
@@ -51,7 +55,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useStateStore } from '@/stores/state'
-// Removed AWSServiceManager import - now using on-demand client creation
+import Swal from 'sweetalert2'
 
 const configStore = useConfigStore()
 const chatStore = useChatStore()
@@ -89,6 +93,28 @@ const getStatusIndicatorClass = computed(() => {
     if (stateStore.isStreaming) return `${baseClass} statusBoxStreaming`
     return `${baseClass} statusBoxConnected`
 })
+
+const startNewChat = async () => {
+    if (chatStore.messages.length === 0) {
+        return // 如果沒有訊息，不需要確認
+    }
+
+    const result = await Swal.fire({
+        title: '開始新聊天',
+        text: '確定要開始新聊天嗎？這將清除所有聊天記錄。',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        reverseButtons: true,
+    })
+
+    if (result.isConfirmed) {
+        chatStore.clearAllData()
+    }
+}
 
 // 切換設定檔
 const handleProfileSwitch = async (profileId: string) => {

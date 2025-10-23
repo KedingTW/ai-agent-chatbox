@@ -24,6 +24,7 @@
         "lodash": "^4.17.21",
         "pinia": "^3.0.3",
         "sass-embedded": "^1.93.2",
+        "sweetalert2": "^11.26.3",
         "vue": "^3.5.22",
         "vue3-markdown": "^1.2.17"
     },

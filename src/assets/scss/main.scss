@@ -4,10 +4,17 @@
 @use 'loading';
 @use 'markdown';
 @use 'message';
+@use 'buttons';
 
-/* CoreUI CSS Variables */
+/* Override Bootstrap and CoreUI CSS Variables */
 :root {
     --header-background: #b479cd;
+
+    /* Bootstrap Variables */
+    --bs-primary: #9348e9;
+    --bs-primary-rgb: 147, 72, 233;
+
+    /* CoreUI Variables */
     --cui-primary: #9348e9;
     --cui-primary-rgb: 147, 72, 233;
     --cui-primary-dark: #5219af;
