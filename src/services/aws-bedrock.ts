@@ -12,7 +12,6 @@ import {
 import type {
     ErrorContext,
     SendMessageResponse,
-    // ConnectionStatus,
 } from '@/types'
 import { classifyError } from '@/types'
 import { getAWSCredentialsConfigFromProfile } from '@/config/aws'
@@ -20,14 +19,11 @@ import type { AWSProfile } from '@/types/aws'
 import { extractTextFromEvent, getErrorCode, getErrorMessage } from '@/helpers/aws-bedrock'
 
 export class AWSBedrockService {
-    private client: BedrockAgentCoreClient | null = null
-    // private connectionStatus: ConnectionStatus
-    private initializationPromise: Promise<void> | null = null
     private profile: AWSProfile
 
     constructor(profile: AWSProfile) {
         if (!profile) {
-            throw new Error('Profile iss not found.')
+            throw new Error('Profile is not found.')
         }
         // 確認是否有選擇設定檔
         this.profile = profile
@@ -92,7 +88,6 @@ export class AWSBedrockService {
         }
 
         try {
-            // Ensure client is ready
             const client = await this.getClient()
 
             // Create command
