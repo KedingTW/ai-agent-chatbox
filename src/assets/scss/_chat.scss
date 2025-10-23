@@ -50,7 +50,7 @@
                     background-color: var(--cui-success);
                 }
             }
-            &.statusBoxDisconnected {
+            &.statusBoxError {
                 &:before {
                     background-color: var(--cui-danger);
                 }
