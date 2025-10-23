@@ -11,7 +11,16 @@
             <div class="chat-header__content">
                 <h2 class="chat-header__title">{{ title }}</h2>
             </div>
-            <div style="text-align: end">
+            <div class="d-flex align-items-center justify-content-end gap-3">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-light"
+                    @click="startNewChat"
+                    title="開始新聊天"
+                >
+                    <span class="me-1">➕</span>
+                    新聊天
+                </button>
                 <div class="chat-status d-flex align-items-center small">
                     <span :class="getStatusIndicatorClass()"></span>
                     {{ connectionStatusText }}
@@ -26,9 +35,18 @@
                     class="chat-header__logo-img"
                 />
             </div>
-            <div class="w-100 d-flex justify-content-between">
+            <div class="w-100 d-flex justify-content-between align-items-center">
                 <h2 class="chat-header__title">{{ title }}</h2>
-                <div style="text-align: end">
+                <div class="d-flex align-items-center gap-2">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-light"
+                        @click="startNewChat"
+                        title="開始新聊天"
+                    >
+                        <span class="me-1">➕</span>
+                        新聊天
+                    </button>
                     <div class="chat-status d-flex align-items-center small">
                         <span :class="getStatusIndicatorClass()"></span>
                         {{ connectionStatusText }}
@@ -41,7 +59,9 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useChatStore } from '@/stores/chat'
 import type { ChatHeaderProps } from '@/types'
+import Swal from 'sweetalert2'
 
 interface Props extends ChatHeaderProps {
     isConnected: boolean
@@ -56,6 +76,7 @@ const props = withDefaults(defineProps<Props>(), {
     isStreaming: false,
 })
 
+const chatStore = useChatStore()
 const isMoblie = ref(false)
 const MOBILE_BREAKPOINT = 768 // 與您的 CSS @media (max-width: 768px) 保持一致
 
@@ -87,6 +108,28 @@ const getStatusIndicatorClass = () => {
     if (!props.isConnected) return `${baseClass} status-indicator--disconnected`
     if (props.isStreaming) return `${baseClass} status-indicator--streaming`
     return `${baseClass} status-indicator--connected`
+}
+
+const startNewChat = async () => {
+    if (chatStore.messages.length === 0) {
+        return // 如果沒有訊息，不需要確認
+    }
+
+    const result = await Swal.fire({
+        title: '開始新聊天',
+        text: '確定要開始新聊天嗎？這將清除所有聊天記錄。',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        reverseButtons: true,
+    })
+
+    if (result.isConfirmed) {
+        chatStore.clearAllData()
+    }
 }
 </script>
 
