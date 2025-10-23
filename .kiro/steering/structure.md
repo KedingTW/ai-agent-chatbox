@@ -51,7 +51,7 @@ This project follows a **Store-driven with Service as Tool Layer** (Store-driven
 ### State Management Layer (Primary)
 
 - **Pinia Stores**: Located in `src/stores/` - the central hub for all application logic
-    - `state.ts`: Core application state store (isInitializing, isConnected, isStreaming, isOffline, hasInitialized)
+    - `state.ts`: Core application state store (isInitializing, isStreaming)
     - `chat.ts`: Chat-specific business logic (messages, sessions, streaming status, chat errors)
     - `config.ts`: Configuration and profile management (AWS profiles, iframe settings)
 - **Store Responsibilities**:
@@ -78,10 +78,7 @@ Components                 ← UI-specific local states
 - **Purpose**: Manages core application lifecycle and global states
 - **Current States**:
     - `isInitializing`: Application startup and configuration loading
-    - `isConnected`: AWS service connection status
     - `isStreaming`: Active streaming operations across the app
-    - `isOffline`: Network connectivity status
-    - `hasInitialized`: Whether app has completed initial setup
 - **Characteristics**:
     - No dependencies on other stores
     - Affects entire application behavior
@@ -114,7 +111,7 @@ Components                 ← UI-specific local states
 
 | State Type             | Store Layer   | Examples                        | Reasoning                   |
 | ---------------------- | ------------- | ------------------------------- | --------------------------- |
-| Application Lifecycle  | State Store   | `isInitializing`, `isConnected` | Affects entire app          |
+| Application Lifecycle  | State Store   | `isInitializing`, `isStreaming` | Affects entire app          |
 | Feature Business Logic | Feature Store | `messages`, `currentSession`    | Domain-specific             |
 | Cross-Feature Shared   | State Store   | `isStreaming`, `isOffline`      | Used by multiple features   |
 | UI Interaction         | Component     | `isFocused`, `isHovered`        | Pure UI, no business impact |
@@ -123,7 +120,7 @@ Components                 ← UI-specific local states
 **State Naming Conventions:**
 
 - **Boolean States**: `is`, `has`, `can`, `should` prefixes
-- **Present Tense**: Current states (`isLoading`, `isConnected`)
+- **Present Tense**: Current states (`isLoading`, `isStreaming`)
 - **Past Tense**: Completed actions (`hasInitialized`, `wasSuccessful`)
 - **Avoid Negatives**: Use `isOffline` instead of `isNotOnline`
 
@@ -241,9 +238,7 @@ export function useMessageRetry() {
     export const useChatStore = defineStore('chat', () => {
         const stateStore = useStateStore()
 
-        const canSendMessage = computed(
-            () => stateStore.isConnected && !stateStore.isStreaming && !stateStore.isInitializing,
-        )
+        const canSendMessage = computed(() => !stateStore.isStreaming && !stateStore.isInitializing)
     })
     ```
 
