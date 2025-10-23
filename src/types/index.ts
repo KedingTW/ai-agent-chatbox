@@ -8,7 +8,6 @@ export type {
     ChatState,
     AWSError,
     MessageSender,
-    StreamEvent,
     StreamingState,
     StreamingStatus,
     ErrorType,

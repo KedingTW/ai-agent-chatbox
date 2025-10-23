@@ -38,38 +38,6 @@ export interface AWSError {
 
 export type MessageSender = 'user' | 'agent'
 
-// Streaming event types
-export interface StreamEvent {
-    event?: {
-        contentBlockDelta?: {
-            delta?: {
-                text?: string
-            }
-        }
-        chunk?: {
-            bytes?: Uint8Array
-        }
-        messageStart?: boolean
-        messageStop?: boolean
-        contentBlockStart?: boolean
-        contentBlockStop?: boolean
-    }
-    contentBlockDelta?: {
-        delta?: {
-            text?: string
-        }
-    }
-    chunk?: {
-        bytes?: Uint8Array
-    }
-    messageStart?: boolean
-    messageStop?: boolean
-    contentBlockStart?: boolean
-    contentBlockStop?: boolean
-    text?: string
-    content?: string | unknown
-}
-
 // Streaming state types
 export type StreamingState = 'idle' | 'connecting' | 'streaming' | 'complete' | 'error'
 

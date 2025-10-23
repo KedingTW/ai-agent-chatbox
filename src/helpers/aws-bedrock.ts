@@ -3,46 +3,6 @@
  * Utility functions for processing AWS Bedrock responses and error handling
  */
 
-import type { StreamEvent } from '@/types'
-
-/**
- * Extract text content from parsed event data
- */
-export function extractTextFromEvent(eventData: StreamEvent): string | null {
-    // Handle different event types
-    if (eventData.event) {
-        const event = eventData.event
-
-        // Handle contentBlockDelta events
-        if (event.contentBlockDelta?.delta?.text) {
-            return event.contentBlockDelta.delta.text
-        }
-
-        // Handle chunk events
-        if (event.chunk?.bytes) {
-            const decoder = new TextDecoder('utf-8')
-            return decoder.decode(new Uint8Array(event.chunk.bytes))
-        }
-
-        // Handle messageStart, messageStop, etc.
-        if (
-            event.messageStart ||
-            event.messageStop ||
-            event.contentBlockStart ||
-            event.contentBlockStop
-        ) {
-            return null // These are control events, no text content
-        }
-    }
-
-    // If it's a simple text response
-    if (typeof eventData === 'string') {
-        return eventData
-    }
-
-    return null
-}
-
 /**
  * Get error code from AWS error
  */

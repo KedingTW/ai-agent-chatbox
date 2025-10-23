@@ -6,8 +6,6 @@
 import {
     BedrockAgentCoreClient,
     InvokeAgentRuntimeCommand,
-    type InvokeAgentRuntimeCommandInput,
-    type InvokeAgentRuntimeCommandOutput,
 } from '@aws-sdk/client-bedrock-agentcore'
 import type {
     ErrorContext,
@@ -16,7 +14,7 @@ import type {
 import { classifyError } from '@/types'
 import { getAWSCredentialsConfigFromProfile } from '@/config/aws'
 import type { AWSProfile } from '@/types/aws'
-import { extractTextFromEvent, getErrorCode, getErrorMessage } from '@/helpers/aws-bedrock'
+import { getErrorCode, getErrorMessage } from '@/helpers/aws-bedrock'
 
 export class AWSBedrockService {
     private profile: AWSProfile
@@ -32,7 +30,7 @@ export class AWSBedrockService {
     /**
      * Get the initialized client (for internal use)
      */
-    async getClient(): Promise<BedrockAgentCoreClient> {
+    getClient(): BedrockAgentCoreClient {
         const credentialsConfig = getAWSCredentialsConfigFromProfile(this.profile)
 
         return new BedrockAgentCoreClient({
@@ -43,20 +41,6 @@ export class AWSBedrockService {
                 requestTimeout: 30000, // 30 seconds
             },
         })
-    }
-
-    /**
-     * Create InvokeAgentRuntimeCommand with proper configuration
-     */
-    private createInvokeAgentRuntimeCommand(message: string): InvokeAgentRuntimeCommandInput {
-        const commandInput = {
-            runtimeSessionId: this.profile.sessionId,
-            agentRuntimeArn: this.profile.bedrockAgentArn,
-            qualifier: 'DEFAULT', // Optional
-            payload: new TextEncoder().encode(JSON.stringify({ prompt: message })), // Convert string to Uint8Array
-        }
-
-        return commandInput
     }
 
     /**
@@ -88,42 +72,39 @@ export class AWSBedrockService {
         }
 
         try {
-            const client = await this.getClient()
-
-            // Create command
-            const commandInput = this.createInvokeAgentRuntimeCommand(message)
-            const command = new InvokeAgentRuntimeCommand(commandInput)
+            const startTime = Date.now()
+            const client = this.getClient()
 
             // Send the message and get streaming response
-            const startTime = Date.now()
-            const response: InvokeAgentRuntimeCommandOutput = await client.send(command)
+            const { response, runtimeSessionId } = await client.send(
+                new InvokeAgentRuntimeCommand({
+                    runtimeSessionId: this.profile.sessionId,
+                    agentRuntimeArn: this.profile.bedrockAgentArn,
+                    qualifier: 'DEFAULT',
+                    payload: new TextEncoder().encode(JSON.stringify({ prompt: message })),
+                })
+            )
 
             // Handle streaming response
-            if (!response.response) {
+            if (!response) {
                 throw new Error('No response stream received from AWS Bedrock')
             }
             // Check if it's a ReadableStream
             if (
-                response.response instanceof ReadableStream ||
-                (response.response && typeof response.response.getReader === 'function')
+                response instanceof ReadableStream ||
+                (response && typeof response.getReader === 'function')
             ) {
-                await this.processReadableStream(response.response, onChunk, onComplete, onError)
-            } else if (response.response.transformToString) {
-                // Fallback to transformToString method
-                const textResponse = await response.response.transformToString()
-                await this.parseSSEResponse(textResponse, onChunk, onComplete, onError)
+                await this.processReadableStream(response, onChunk, onComplete, onError)
             } else {
                 throw new Error('Unsupported response format')
             }
 
-            const duration = Date.now() - startTime
-
             return {
                 success: true,
                 messageId,
-                sessionId: response.runtimeSessionId || sessionId || this.profile.sessionId,
-                duration,
-                streamingResponse: response.response,
+                sessionId: runtimeSessionId || sessionId || this.profile.sessionId,
+                duration: Date.now() - startTime,
+                streamingResponse: response,
             }
         } catch (error) {
             const errorContext: ErrorContext = {
@@ -238,80 +219,6 @@ export class AWSBedrockService {
             }
         } catch (error) {
             console.warn('Error processing SSE buffer:', error, eventData.substring(0, 100) + '...')
-        }
-    }
-
-    /**
-     * Parse Server-Sent Events response format
-     */
-    private async parseSSEResponse(
-        sseText: string,
-        onChunk?: (chunk: string) => void,
-        onComplete?: () => void,
-        onError?: (error: ErrorContext) => void,
-    ): Promise<void> {
-        try {
-            // Split by double newlines to get individual events
-            const events = sseText.split('\n\n').filter((event) => event.trim())
-
-            for (const event of events) {
-                try {
-                    // Parse each SSE event
-                    const lines = event.split('\n')
-                    let eventData = ''
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            eventData = line.substring(6) // Remove 'data: ' prefix
-                            break
-                        }
-                    }
-
-                    if (eventData) {
-                        // Try to extract text content directly using regex for Python dict format
-                        try {
-                            // Look for contentBlockDelta text pattern
-                            const textMatch = eventData.match(
-                                /'contentBlockDelta':\s*\{[^}]*'text':\s*'([^']*)'/,
-                            )
-                            if (textMatch && textMatch[1]) {
-                                // Decode escaped characters
-                                const text = textMatch[1]
-                                    .replace(/\\n/g, '\n')
-                                    .replace(/\\t/g, '\t')
-                                    .replace(/\\'/g, "'")
-                                    .replace(/\\"/g, '"')
-                                onChunk?.(text)
-                            } else {
-                                // Try to parse as JSON for other formats
-                                try {
-                                    const parsedData = JSON.parse(eventData)
-                                    const textContent = extractTextFromEvent(parsedData)
-                                    if (textContent) {
-                                        onChunk?.(textContent)
-                                    }
-                                } catch {
-                                    // If all parsing fails, silently continue
-                                }
-                            }
-                        } catch (parseError) {
-                            console.warn('Error processing event:', parseError)
-                        }
-                    }
-                } catch (eventError) {
-                    console.warn('Error parsing SSE event:', eventError, event)
-                }
-            }
-
-            onComplete?.()
-        } catch (error) {
-            const errorContext: ErrorContext = {
-                type: 'streaming',
-                code: 'SSE_PARSING_ERROR',
-                message: error instanceof Error ? error.message : 'SSE parsing failed',
-                timestamp: new Date(),
-            }
-            onError?.(errorContext)
         }
     }
 }
