@@ -3,25 +3,26 @@
         <div class="col-12 col-md-4 chatHeaderLogo">
             <!-- Logo -->
             <img
-                src="/images/096bca4d-b3d4-4087-9e74-6d534396cf97.png"
+                src="/images/KDlogo.png"
                 alt="Logo"
                 class="chatHeaderLogoImg"
             />
         </div>
-        <div class="col-9 col-md-4 chatHeaderTitle">
+        <div class="col-6 col-md-4 chatHeaderTitle">
             <!-- Title -->
             <h2 class="tt">{{ displayTitle }}</h2>
         </div>
-        <div class="col-3 col-md-4 chatHeaderMenu">
-            <!-- Status、Menu -->
+        <div class="col-6 col-md-4 chatHeaderMenu">
+            <!-- startNewChat、Menu -->
+             <!-- Status、Menu -->
             <div class="chatStatus">
-                <CButton color="primary" @click="startNewChat" title="開始新聊天">
-                    <span class="me-1"><i class="bi bi-plus-circle-dotted"></i></span>
-                    新聊天
-                </CButton>
                 <span :class="getStatusIndicatorClass" class="statusBox">
                     {{ connectionStatusText }}
                 </span>
+                <CButton color="primary" @click="startNewChat" title="開始新聊天">
+                    <span class="me-1" v-if="!isMobile"><i class="bi bi-plus-circle-dotted"></i></span>
+                    新聊天
+                </CButton>
             </div>
             <!-- 只在非 iframe 模式或允許顯示選單時顯示設定檔切換選單 -->
             <CDropdown v-if="shouldShowMenu" variant="nav-item" dark>
@@ -55,11 +56,12 @@ import { computed, onMounted, ref } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useStateStore } from '@/stores/state'
-import { popMsgHelper } from '@/helpers/common'
+import { popMsgHelper, useMobileHelper } from '@/helpers/common'
 
 const configStore = useConfigStore()
 const chatStore = useChatStore()
 const stateStore = useStateStore()
+const { isMobile } = useMobileHelper()
 
 // iframe 配置錯誤狀態
 const iframeConfigError = ref<string | null>(null)
