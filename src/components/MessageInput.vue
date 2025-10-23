@@ -1,14 +1,14 @@
 <template>
     <div :class="containerClasses">
-        <form @submit.prevent="handleSubmit" class="message-input-form">
+        <form @submit.prevent="handleSubmit" class="messageInputForm">
             <!-- Input field -->
-            <div class="input-group message-input__group">
+            <div class="messageInputGroup">
                 <textarea
                     ref="textareaRef"
                     v-model="inputValue"
                     :class="textareaClasses"
                     :placeholder="placeholder"
-                    :disabled="disabled"
+                    :disabled="stateStore.isStreaming || disabled || !chatStore.canSendMessage"
                     rows="3"
                     @keydown="handleKeyDown"
                     @focus="handleFocus"
@@ -17,23 +17,33 @@
                     @compositionend="handleCompositionEnd"
                     aria-label="Type your message"
                 />
-
-                <!-- Send button -->
                 <button
+                    v-if="!stateStore.isStreaming"
                     :class="sendButtonClasses"
+                    :disabled="!chatStore.canSendMessage"
                     type="submit"
-                    :disabled="!canSend"
                     :aria-label="sendButtonLabel"
                 >
                     <span v-if="disabled" class="spinner-border spinner-border-sm"></span>
-                    <span v-else>{{ sendButtonText }}</span>
+                    <span v-else>
+                        <i v-if="chatStore.canSendMessage" class="bi bi-send-fill"></i>
+                    </span>
+                </button>
+                <button
+                    v-else
+                    class="messageInputSendBtn"
+                    @click="handleCancelStreaming"
+                    type="button"
+                    aria-label="Cancel current response"
+                >
+                    <i class="bi bi-square-fill"></i>
                 </button>
             </div>
 
             <!-- Error message -->
             <div
                 v-if="errorMessage"
-                class="error-message text-danger mt-2"
+                class="errorMessage text-danger mt-2"
                 role="alert"
                 aria-live="assertive"
             >
@@ -46,11 +56,11 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { MessageInputProps } from '@/types'
+import { useChatStore } from '@/stores/chat'
+import { useStateStore } from '@/stores/state'
 
 // Props
 const props = withDefaults(defineProps<MessageInputProps>(), {
-    disabled: false,
-    placeholder: 'Type your message...',
     maxLength: 4000,
     multiline: true,
 })
@@ -62,6 +72,9 @@ const emit = defineEmits<{
     focus: []
     blur: []
 }>()
+
+const chatStore = useChatStore()
+const stateStore = useStateStore()
 
 // Refs
 const textareaRef = ref<HTMLTextAreaElement>()
@@ -80,7 +93,7 @@ const characterCount = computed(() => inputValue.value.length)
 const trimmedValue = computed(() => inputValue.value.trim())
 const canSend = computed(() => {
     const result =
-        !props.disabled &&
+        chatStore.canSendMessage &&
         trimmedValue.value.length > 0 &&
         characterCount.value <= (props.maxLength || 4000) &&
         !errorMessage.value
@@ -88,43 +101,43 @@ const canSend = computed(() => {
     return result
 })
 
-const sendButtonText = computed(() => {
-    if (props.disabled) return ''
-    return '📤'
+const placeholder = computed(() => {
+    if (stateStore.isInitializing) return '連線中...'
+    if (stateStore.isStreaming) return '回應中'
+    return '請說明你的問題...'
 })
 
 const sendButtonLabel = computed(() => {
-    if (props.disabled) return 'Sending message...'
+    if (!chatStore.canSendMessage) return 'Sending message...'
     if (!canSend.value) return 'Cannot send message'
     return 'Send message'
 })
 
 // CSS Classes
 const containerClasses = computed(() => [
-    'message-input',
+    'messageInput',
     {
-        'message-input--disabled': props.disabled,
-        'message-input--focused': isFocused.value,
-        'message-input--error': !!errorMessage.value,
+        messageInputDisabled: !chatStore.canSendMessage,
+        messageInputFocused: isFocused.value,
+        messageInputError: !!errorMessage.value,
     },
 ])
 
 const textareaClasses = computed(() => [
     'form-control',
-    'message-input__textarea',
+    'messageInputTextarea',
     {
         'is-invalid': !!errorMessage.value,
-        'message-input__textarea--multiline': props.multiline,
-        'message-input__textarea--single': !props.multiline,
+        messageInputTextareaMultiline: props.multiline,
+        messageInputTextareaSingle: !props.multiline,
     },
 ])
 
 const sendButtonClasses = computed(() => [
-    'btn',
-    'message-input__send-button',
+    'messageInputSendBtn',
     {
-        'btn-primary': canSend.value,
-        'btn-outline-secondary': !canSend.value,
+        canSend: canSend.value,
+        noSend: !canSend.value,
     },
 ])
 
@@ -187,6 +200,9 @@ const handleCompositionStart = () => {
 const handleCompositionEnd = () => {
     isComposing.value = false
 }
+const handleCancelStreaming = () => {
+    chatStore.stopStreaming()
+}
 
 const setTyping = (typing: boolean) => {
     if (isTyping.value !== typing) {
@@ -209,6 +225,7 @@ const clearInput = () => {
     setTyping(false)
 
     if (textareaRef.value) {
+        textareaRef.value.innerText = ''
         textareaRef.value.style.height = 'auto'
     }
 }
@@ -219,7 +236,7 @@ const focusInput = () => {
 
 // Watch for external disabled state changes
 watch(
-    () => props.disabled,
+    () => chatStore.canSendMessage,
     (disabled) => {
         if (disabled) {
             setTyping(false)
@@ -238,203 +255,3 @@ defineExpose({
     },
 })
 </script>
-
-<style scoped>
-.message-input {
-    background-color: white;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    border: 1px solid var(--cui-gray-200);
-    transition: all 0.2s ease;
-}
-
-/* .message-input--focused styles removed */
-
-.message-input--disabled {
-    background-color: var(--cui-gray-50);
-    opacity: 0.7;
-}
-
-.message-input--error {
-    border-color: var(--cui-danger);
-}
-
-.message-input-form {
-    width: 100%;
-}
-
-.message-input__group {
-    margin-bottom: 0;
-}
-
-.message-input__textarea {
-    border-right: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    resize: none;
-    min-height: 2.5rem;
-    line-height: 1.5;
-    font-family: inherit;
-    transition: height 0.2s ease;
-}
-
-.message-input__textarea--single {
-    overflow: hidden;
-}
-
-.message-input__textarea--multiline {
-    overflow-y: auto;
-}
-
-.message-input__textarea:focus {
-    /* Border color change removed */
-    box-shadow: none;
-}
-
-.message-input__textarea::placeholder {
-    color: var(--cui-gray-500);
-    font-style: italic;
-}
-
-.message-input__send-button {
-    border-left: none;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    min-width: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-}
-
-.message-input__send-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-}
-
-.message-input__send-button:active {
-    transform: translateY(0);
-}
-
-.message-input__status {
-    min-height: 1.25rem;
-}
-
-.character-count {
-    font-variant-numeric: tabular-nums;
-}
-
-.typing-indicator {
-    font-size: 0.75rem;
-    color: var(--cui-info);
-    font-style: italic;
-}
-
-.error-message {
-    font-size: 0.75rem;
-    margin: 0;
-}
-
-.keyboard-help {
-    opacity: 0;
-    transform: translateY(-0.5rem);
-    transition: all 0.3s ease;
-}
-
-.message-input--focused .keyboard-help {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-kbd {
-    background-color: var(--cui-gray-100);
-    border: 1px solid var(--cui-gray-300);
-    border-radius: 0.25rem;
-    padding: 0.125rem 0.25rem;
-    font-size: 0.75rem;
-    font-family: monospace;
-}
-
-/* Scrollbar styling for textarea */
-.message-input__textarea::-webkit-scrollbar {
-    width: 4px;
-}
-
-.message-input__textarea::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.message-input__textarea::-webkit-scrollbar-thumb {
-    background: var(--cui-gray-300);
-    border-radius: 2px;
-}
-
-.message-input__textarea::-webkit-scrollbar-thumb:hover {
-    background: var(--cui-gray-400);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .message-input {
-        padding: 0.75rem;
-    }
-
-    .message-input__send-button {
-        min-width: 2.5rem;
-        font-size: 0.875rem;
-    }
-
-    .keyboard-help {
-        display: none;
-    }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-    .message-input {
-        border-width: 2px;
-    }
-
-    .message-input__textarea {
-        border-width: 2px;
-    }
-
-    .message-input__send-button {
-        border-width: 2px;
-    }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    .message-input {
-        transition: none;
-    }
-
-    .message-input__textarea {
-        transition: none;
-    }
-
-    .message-input__send-button {
-        transition: none;
-    }
-
-    .message-input__send-button:hover:not(:disabled) {
-        transform: none;
-    }
-
-    .keyboard-help {
-        transition: none;
-    }
-}
-
-/* Focus styles for accessibility */
-.message-input__send-button:focus-visible {
-    outline: 2px solid var(--cui-primary);
-    outline-offset: 2px;
-}
-
-.message-input__textarea:focus-visible {
-    /* Outline color change removed */
-    outline: none;
-}
-</style>

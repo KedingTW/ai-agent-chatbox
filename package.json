@@ -1,5 +1,5 @@
 {
-    "name": "ai-agent-chatbox-poc",
+    "name": "ai-agent-chatbox",
     "version": "0.0.0",
     "private": true,
     "type": "module",
@@ -19,9 +19,11 @@
         "@coreui/vue": "^5.5.0",
         "@types/lodash": "^4.17.20",
         "bootstrap": "^5.3.8",
+        "bootstrap-icons": "^1.13.1",
         "dotenv": "^17.2.0",
         "lodash": "^4.17.21",
         "pinia": "^3.0.3",
+        "sass-embedded": "^1.93.2",
         "sweetalert2": "^11.26.3",
         "vue": "^3.5.22",
         "vue3-markdown": "^1.2.17"
@@ -41,6 +43,8 @@
         "jiti": "^2.4.2",
         "npm-run-all2": "^8.0.4",
         "prettier": "3.5.3",
+        "sass": "^1.93.2",
+        "sass-loader": "^16.0.5",
         "tsx": "^4.20.3",
         "typescript": "^5.8.3",
         "vite": "^7.0.0",

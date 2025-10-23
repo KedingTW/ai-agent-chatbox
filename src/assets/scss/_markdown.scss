@@ -1,0 +1,13 @@
+.markdownContent blockquote {
+    font-style: italic !important;
+    color: var(--cui-gray-500) !important;
+}
+
+.markdownContent a {
+    color: var(--cui-primary) !important;
+    text-decoration: underline !important;
+}
+
+.markdownContent th {
+    background-color: var(--cui-gray-200);
+}

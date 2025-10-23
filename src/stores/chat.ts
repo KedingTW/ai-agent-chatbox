@@ -1,6 +1,6 @@
 /**
- * Chat store for AWS Bedrock chatbot
- * Manages chat state, message history, streaming, and error handling
+ * AWS Bedrock 聊天機器人的 Chat store
+ * 管理聊天狀態、訊息歷史、串流和錯誤處理
  */
 
 import { ref, computed } from 'vue'
@@ -12,18 +12,25 @@ import type {
     UserMessage,
     AgentMessage,
     ChatSession,
-    ConnectionStatus,
 } from '@/types'
-import { isUserMessage, isAgentMessage, validateMessage, sanitizeMessageContent } from '@/types'
+import {
+    isUserMessage,
+    isAgentMessage,
+    validateMessage,
+    sanitizeMessageContent,
+} from '@/helpers/message'
+import { AWSBedrockService } from '@/services/aws-bedrock'
+import { useConfigStore } from './config'
+import { useStateStore } from './state'
 import { clearPersistedState } from './plugins/persistence'
 
 export const useChatStore = defineStore('chat', () => {
-    // Core state
+    // 使用 state store 的全域狀態
+    const stateStore = useStateStore()
+
+    // Chat 專用狀態
     const messages = ref<Message[]>([])
-    const isStreaming = ref(false)
     const currentStreamingMessageId = ref<string | null>(null)
-    const error = ref<ErrorContext | null>(null)
-    const isConnected = ref(false)
 
     // Enhanced state
     const streamingStatus = ref<StreamingStatus>({
@@ -33,12 +40,7 @@ export const useChatStore = defineStore('chat', () => {
         error: null,
     })
 
-    const connectionStatus = ref<ConnectionStatus>({
-        isConnected: false,
-        lastConnected: null,
-        connectionAttempts: 0,
-        latency: null,
-    })
+    // Remove connection status as we'll create client on-demand
 
     const currentSession = ref<ChatSession>({
         id: `session_${Date.now()}`,
@@ -58,11 +60,11 @@ export const useChatStore = defineStore('chat', () => {
     const hasMessages = computed(() => messages.value.length > 0)
 
     const isWaitingForResponse = computed(
-        () => isStreaming.value || streamingStatus.value.state === 'connecting',
+        () => stateStore.isStreaming || streamingStatus.value.state === 'connecting',
     )
 
     const canSendMessage = computed(
-        () => isConnected.value && !isWaitingForResponse.value && !error.value,
+        () => !isWaitingForResponse.value && !stateStore.error && !stateStore.isInitializing,
     )
 
     // Message management actions
@@ -114,7 +116,7 @@ export const useChatStore = defineStore('chat', () => {
         if (addMessage(agentMessage)) {
             if (streaming) {
                 currentStreamingMessageId.value = agentMessage.id
-                isStreaming.value = true
+                stateStore.isStreaming = true
             }
             return agentMessage
         }
@@ -159,7 +161,7 @@ export const useChatStore = defineStore('chat', () => {
 
         if (currentStreamingMessageId.value === messageId) {
             currentStreamingMessageId.value = null
-            isStreaming.value = false
+            stateStore.isStreaming = false
             updateStreamingStatus({
                 state: 'complete',
                 messageId: null,
@@ -185,7 +187,7 @@ export const useChatStore = defineStore('chat', () => {
     const clearMessages = (): void => {
         messages.value = []
         currentStreamingMessageId.value = null
-        isStreaming.value = false
+        stateStore.isStreaming = false
         currentSession.value.messageCount = 0
         updateStreamingStatus({
             state: 'idle',
@@ -197,7 +199,7 @@ export const useChatStore = defineStore('chat', () => {
     // Streaming state management
     const startStreaming = (messageId: string): void => {
         currentStreamingMessageId.value = messageId
-        isStreaming.value = true
+        stateStore.isStreaming = true
         updateStreamingStatus({
             state: 'streaming',
             messageId,
@@ -212,7 +214,7 @@ export const useChatStore = defineStore('chat', () => {
                 completeMessage(currentStreamingMessageId.value)
             }
             currentStreamingMessageId.value = null
-            isStreaming.value = false
+            stateStore.isStreaming = false
             updateStreamingStatus({
                 state: 'complete',
                 messageId: null,
@@ -227,8 +229,9 @@ export const useChatStore = defineStore('chat', () => {
 
     // Error handling
     const setError = (errorContext: ErrorContext | null): void => {
-        error.value = errorContext
+        stateStore.error = errorContext
         if (errorContext) {
+            stateStore.isStreaming = false
             updateStreamingStatus({
                 state: 'error',
                 error: errorContext,
@@ -237,7 +240,7 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     const clearError = (): void => {
-        error.value = null
+        stateStore.error = null
         if (streamingStatus.value.state === 'error') {
             updateStreamingStatus({
                 state: 'idle',
@@ -256,29 +259,6 @@ export const useChatStore = defineStore('chat', () => {
         return null
     }
 
-    // Connection management
-    const setConnectionStatus = (status: Partial<ConnectionStatus>): void => {
-        connectionStatus.value = { ...connectionStatus.value, ...status }
-        isConnected.value = status.isConnected ?? connectionStatus.value.isConnected
-
-        if (status.isConnected) {
-            connectionStatus.value.lastConnected = new Date()
-            connectionStatus.value.connectionAttempts = 0
-        } else {
-            connectionStatus.value.connectionAttempts++
-        }
-    }
-
-    const connect = (): void => {
-        setConnectionStatus({ isConnected: true })
-        clearError()
-    }
-
-    const disconnect = (): void => {
-        setConnectionStatus({ isConnected: false })
-        stopStreaming()
-    }
-
     // Session management
     const startNewSession = (): void => {
         currentSession.value = {
@@ -294,7 +274,7 @@ export const useChatStore = defineStore('chat', () => {
 
     const endSession = (): void => {
         currentSession.value.isActive = false
-        disconnect()
+        stopStreaming()
     }
 
     // Recovery actions
@@ -305,21 +285,66 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    const resetState = (): void => {
-        clearMessages()
-        clearError()
-        disconnect()
-        updateStreamingStatus({
-            state: 'idle',
-            messageId: null,
-            progress: 0,
-            error: null,
-        })
-        connectionStatus.value = {
-            isConnected: false,
-            lastConnected: null,
-            connectionAttempts: 0,
-            latency: null,
+    // Message sending actions
+    const sendMessage = async (message: string): Promise<void> => {
+        if (!canSendMessage.value) {
+            console.log('Cannot send message - not allowed')
+            return
+        }
+
+        // Get current active profile
+        const configStore = useConfigStore()
+        const activeProfile = configStore.activeProfile
+
+        if (!activeProfile) {
+            const errorContext: ErrorContext = {
+                type: 'validation',
+                code: 'NO_ACTIVE_PROFILE',
+                message: 'No active profile found',
+                timestamp: new Date(),
+            }
+            setError(errorContext)
+            return
+        }
+
+        try {
+            // Create AWS Bedrock service instance on-demand
+            const awsService = new AWSBedrockService(activeProfile)
+
+            // Add user message to store
+            const userMessage = addUserMessage(message)
+            if (!userMessage) return
+
+            // Add placeholder agent message for streaming
+            const agentMessage = addAgentMessage('', true)
+            if (!agentMessage) return
+
+            // Send message with streaming
+            await awsService.sendMessageWithStreaming(
+                message,
+                currentSession.value.id,
+                // onChunk
+                (chunk: string) => {
+                    appendToMessage(agentMessage.id, chunk)
+                },
+                // onComplete
+                () => {
+                    completeMessage(agentMessage.id)
+                },
+                // onError
+                (error: ErrorContext) => {
+                    setError(error)
+                    removeMessage(agentMessage.id)
+                },
+            )
+        } catch (error) {
+            const errorContext: ErrorContext = {
+                type: 'api',
+                code: 'SEND_MESSAGE_FAILED',
+                message: error instanceof Error ? error.message : 'Failed to send message',
+                timestamp: new Date(),
+            }
+            setError(errorContext)
         }
     }
 
@@ -353,12 +378,8 @@ export const useChatStore = defineStore('chat', () => {
     return {
         // State
         messages,
-        isStreaming,
         currentStreamingMessageId,
-        error,
-        isConnected,
         streamingStatus,
-        connectionStatus,
         currentSession,
 
         // Computed
@@ -390,17 +411,14 @@ export const useChatStore = defineStore('chat', () => {
         retryLastMessage,
         recoverFromError,
 
-        // Connection actions
-        setConnectionStatus,
-        connect,
-        disconnect,
-
         // Session actions
         startNewSession,
         endSession,
 
+        // Message sending actions
+        sendMessage,
+
         // Utility actions
-        resetState,
         clearAllData,
     }
 })

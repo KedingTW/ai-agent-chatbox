@@ -2,7 +2,6 @@
     <div
         ref="containerRef"
         :class="containerClasses"
-        :style="containerStyles"
         role="log"
         aria-live="polite"
         aria-label="Chat conversation"
@@ -10,15 +9,13 @@
         <!-- Empty state -->
         <div
             v-if="!hasMessages"
-            class="empty-state text-center p-4"
+            class="emptyState text-center p-4"
             role="status"
             aria-label="No messages yet"
         >
-            <div class="empty-state__icon">💬</div>
-            <div class="empty-state__title">開始對話吧</div>
-            <div class="empty-state__subtitle">
-                隨時詢問客戶資訊，全面掌握決策依據
-            </div>
+            <div class="emptyStateIcon"><i class="bi bi-chat-dots-fill"></i></div>
+            <div class="emptyStateTitle">開始對話吧</div>
+            <div class="emptyStateSubtitle">{{ displayDesc }}</div>
         </div>
 
         <!-- Message list -->
@@ -28,20 +25,11 @@
             class="messages h-100 overflow-auto p-3"
             @scroll="handleScroll"
         >
-            <!-- Messages -->
-            <MessageItem
-                v-for="message in messages"
-                :key="message.id"
-                :message="message"
-                :is-streaming="isStreaming && message.id === currentStreamingMessageId"
-                @retry="handleMessageRetry"
-            />
-
             <!-- Scroll to bottom button -->
             <Transition name="scroll-button">
                 <button
                     v-if="showScrollButton"
-                    class="scroll-to-bottom btn btn-primary btn-sm rounded-circle position-fixed"
+                    class="scrollToBottom btn btn-primary btn-sm rounded-circle position-fixed"
                     @click="() => scrollToBottom()"
                     type="button"
                     aria-label="Scroll to bottom of conversation"
@@ -49,26 +37,34 @@
                     ↓
                 </button>
             </Transition>
+
+            <!-- Messages -->
+            <MessageItem
+                v-for="message in chatStore.messages"
+                :key="message.id"
+                :message="message"
+                :is-streaming="chatStore.messages && message.id === currentStreamingMessageId"
+            />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
-import type { MessageListProps } from '@/types'
 import MessageItem from './MessageItem.vue'
+import { useChatStore } from '@/stores/chat'
+import { useConfigStore } from '@/stores/config'
+import { useStateStore } from '@/stores/state'
 
-// Props
-const props = withDefaults(defineProps<MessageListProps>(), {
-    isStreaming: false,
-    autoScroll: true,
-    maxHeight: '400px',
+const chatStore = useChatStore()
+const configStore = useConfigStore()
+const stateStore = useStateStore()
+const activeProfile = computed(() => configStore.activeProfile)
+const displayDesc = computed(() => {
+    // 目前設定檔description，若無設定檔則顯示預設標題
+    return activeProfile.value?.description || 'AI Assistant'
 })
-
-// Emits
-const emit = defineEmits<{
-    messageRetry: [messageId: string]
-}>()
+// Props
 
 // Refs
 const containerRef = ref<HTMLElement>()
@@ -80,19 +76,15 @@ const showScrollButton = ref(false)
 const currentStreamingMessageId = ref<string | null>(null)
 
 // Computed properties
-const hasMessages = computed(() => props.messages.length > 0)
+const hasMessages = computed(() => chatStore.messages.length > 0)
 
 const containerClasses = computed(() => [
-    'message-list',
+    'messageList',
     {
-        'message-list--empty': !hasMessages.value,
-        'message-list--streaming': props.isStreaming,
+        messageListEmpty: !hasMessages.value,
+        messageListStreaming: stateStore.isStreaming,
     },
 ])
-
-const containerStyles = computed(() => ({
-    maxHeight: props.maxHeight,
-}))
 
 // Methods
 const scrollToBottom = async (smooth: boolean = true) => {
@@ -123,15 +115,11 @@ const handleScroll = () => {
     showScrollButton.value = !isAtBottom.value && hasMessages.value
 }
 
-const handleMessageRetry = (messageId: string) => {
-    emit('messageRetry', messageId)
-}
-
 // Auto-scroll when new messages arrive
 watch(
-    () => props.messages.length,
+    () => chatStore.messages.length,
     async (newLength, oldLength) => {
-        if (newLength > oldLength && props.autoScroll && isAtBottom.value) {
+        if (newLength > oldLength) {
             await nextTick()
             scrollToBottom(true)
         }
@@ -140,9 +128,9 @@ watch(
 
 // Auto-scroll when streaming starts/updates
 watch(
-    () => props.isStreaming,
+    () => stateStore.isStreaming,
     async (isStreaming) => {
-        if (isStreaming && props.autoScroll && isAtBottom.value) {
+        if (isStreaming) {
             await nextTick()
             scrollToBottom(false) // Don't animate during streaming for better performance
         }
@@ -151,12 +139,34 @@ watch(
 
 // Track current streaming message
 watch(
-    () => props.messages,
+    () => chatStore.messages,
     (messages) => {
         const streamingMessage = messages.find((m) => m.isStreaming)
         currentStreamingMessageId.value = streamingMessage?.id || null
     },
     { deep: true },
+)
+
+watch(
+    // 當AI回復完成後，要滾至最下方
+    () => {
+        const lastMessage = chatStore.messages[chatStore.messages.length - 1]
+        // 我們只需要追蹤 AI agent 的訊息完成狀態
+        if (lastMessage && lastMessage.sender === 'agent') {
+            return lastMessage.isComplete
+        }
+        return null // 非 AI 訊息或無訊息時不追蹤
+    },
+    async (isCompletedNow, wasCompletedBefore) => {
+        // 條件判斷：
+        // 1. 新狀態是已完成 (isCompletedNow === true)
+        // 2. 舊狀態是未完成或不存在 (wasCompletedBefore !== true)
+        if (isCompletedNow === true && wasCompletedBefore !== true) {
+            // AI 回覆完成，強制滾動到底部 (可以使用動畫)
+            await nextTick()
+            scrollToBottom(true)
+        }
+    },
 )
 
 // Intersection Observer for auto-scroll optimization
@@ -185,7 +195,7 @@ onMounted(() => {
     }
 
     // Initial scroll to bottom
-    if (hasMessages.value && props.autoScroll) {
+    if (hasMessages.value) {
         nextTick(() => scrollToBottom(false))
     }
 })
@@ -202,182 +212,3 @@ defineExpose({
     isAtBottom: () => isAtBottom.value,
 })
 </script>
-
-<style scoped>
-.message-list {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background-color: var(--cui-gray-50);
-    border: 1px solid var(--cui-gray-200);
-    border-radius: 0.5rem;
-    overflow: hidden;
-    position: relative;
-}
-
-.message-list--empty {
-    justify-content: center;
-    align-items: center;
-}
-
-.message-list--streaming {
-    border-color: var(--cui-info);
-}
-
-.empty-state {
-    color: var(--cui-gray-600);
-}
-
-.empty-state__icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-}
-
-.empty-state__title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--cui-gray-700);
-}
-
-.empty-state__subtitle {
-    font-size: 0.875rem;
-    color: var(--cui-gray-500);
-}
-
-.messages {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    scroll-behavior: smooth;
-}
-
-.messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-.messages::-webkit-scrollbar-track {
-    background: var(--cui-gray-100);
-}
-
-.messages::-webkit-scrollbar-thumb {
-    background: var(--cui-gray-300);
-    border-radius: 3px;
-}
-
-.messages::-webkit-scrollbar-thumb:hover {
-    background: var(--cui-gray-400);
-}
-
-.load-more-button {
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-}
-
-.load-more-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.scroll-to-bottom {
-    bottom: 1rem;
-    right: 1rem;
-    width: 2.5rem;
-    height: 2.5rem;
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    font-size: 1rem;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.scroll-to-bottom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Transitions */
-.scroll-button-enter-active,
-.scroll-button-leave-active {
-    transition: all 0.3s ease;
-}
-
-.scroll-button-enter-from,
-.scroll-button-leave-to {
-    opacity: 0;
-    transform: translateY(1rem) scale(0.8);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .messages {
-        padding: 1rem;
-    }
-
-    .scroll-to-bottom {
-        bottom: 0.5rem;
-        right: 0.5rem;
-        width: 2rem;
-        height: 2rem;
-        font-size: 0.875rem;
-    }
-
-    .empty-state__icon {
-        font-size: 2rem;
-    }
-
-    .empty-state__title {
-        font-size: 1rem;
-    }
-
-    .empty-state__subtitle {
-        font-size: 0.75rem;
-    }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-    .message-list {
-        border-width: 2px;
-    }
-
-    .scroll-to-bottom {
-        border: 2px solid var(--cui-primary-dark);
-    }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    .messages {
-        scroll-behavior: auto;
-    }
-
-    .scroll-button-enter-active,
-    .scroll-button-leave-active {
-        transition: none;
-    }
-
-    .load-more-button:hover:not(:disabled) {
-        transform: none;
-    }
-
-    .scroll-to-bottom:hover {
-        transform: none;
-    }
-}
-
-/* Focus styles for accessibility */
-.scroll-to-bottom:focus-visible {
-    outline: 2px solid var(--cui-primary);
-    outline-offset: 2px;
-}
-
-.load-more-button:focus-visible {
-    outline: 2px solid var(--cui-primary);
-    outline-offset: 2px;
-}
-</style>
