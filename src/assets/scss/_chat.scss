@@ -6,9 +6,13 @@
 }
 .chatHeaderLogo {
     display: flex;
-    align-items: center;
+    align-items: end;
     justify-content: flex-start;
     padding: 0;
+    @media (max-width: 768px) {
+        justify-content: space-between;
+        align-items: center;
+    }
     .chatHeaderLogoImg {
         height: 40px;
         width: auto;

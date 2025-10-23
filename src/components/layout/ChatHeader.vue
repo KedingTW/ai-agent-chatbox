@@ -3,6 +3,14 @@
         <div class="col-12 col-md-4 chatHeaderLogo">
             <!-- Logo -->
             <img src="/images/KDlogo.png" alt="Logo" class="chatHeaderLogoImg" />
+            <!-- 開發模式 -->
+            <span class="badge text-bg-warning mx-2" v-if="environment == 'dev'">{{
+                environment
+            }}</span>
+            <!-- 測試模式 -->
+            <span class="badge text-bg-success mx-2" v-if="environment == 'beta'">{{
+                environment
+            }}</span>
         </div>
         <div class="col-6 col-md-4 chatHeaderTitle">
             <!-- Title -->
@@ -64,6 +72,9 @@ const { isMobile } = useMobileHelper()
 // iframe 配置錯誤狀態
 const iframeConfigError = ref<string | null>(null)
 const hasValidIframeConfig = ref(true)
+
+// 環境變數
+const environment = ref(import.meta.env.VITE_ENVIRONMENT)
 
 // 設定檔管理 - 保持響應性，不要解構
 const profiles = computed(() => configStore.profiles)
