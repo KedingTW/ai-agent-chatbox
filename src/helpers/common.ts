@@ -38,8 +38,9 @@ export function useMobileHelper(): MobileHelperReturn {
 }
 
 // popMsgHelper 使用 SweetAlert2
+import type { SweetAlertResult } from 'sweetalert2'
+
 type SweetAlertIcon = 'warning' | 'error' | 'info' | 'success' | 'confirm' | 'question'
-type SweetAlertResult = Promise<any>
 
 interface PopMsgBtnInfo {
     confirmBtnText?: string
@@ -71,7 +72,7 @@ export const popMsgHelper = ({
     statusCode = '',
     title = '',
     btnInfo,
-}: PopMsgHelperOptions): SweetAlertResult | void => {
+}: PopMsgHelperOptions): Promise<SweetAlertResult> => {
     const statusCodeText = statusCode ? `statusCode:${statusCode}` : ''
 
     // 確認與取消按鈕顏色統一控制
@@ -151,6 +152,6 @@ export const popMsg = (
     statusCode: number | string = '',
     title: string = '',
     btnInfo?: PopMsgBtnInfo,
-): SweetAlertResult | void => {
+): Promise<SweetAlertResult> => {
     return popMsgHelper({ status, msg, statusCode, title, btnInfo })
 }

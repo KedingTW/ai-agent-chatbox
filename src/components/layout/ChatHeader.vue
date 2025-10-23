@@ -2,11 +2,7 @@
     <div class="row chatHeader">
         <div class="col-12 col-md-4 chatHeaderLogo">
             <!-- Logo -->
-            <img
-                src="/images/KDlogo.png"
-                alt="Logo"
-                class="chatHeaderLogoImg"
-            />
+            <img src="/images/KDlogo.png" alt="Logo" class="chatHeaderLogoImg" />
         </div>
         <div class="col-6 col-md-4 chatHeaderTitle">
             <!-- Title -->
@@ -14,13 +10,15 @@
         </div>
         <div class="col-6 col-md-4 chatHeaderMenu">
             <!-- startNewChat、Menu -->
-             <!-- Status、Menu -->
+            <!-- Status、Menu -->
             <div class="chatStatus">
                 <span :class="getStatusIndicatorClass" class="statusBox">
                     {{ connectionStatusText }}
                 </span>
                 <CButton color="primary" @click="startNewChat" title="開始新聊天">
-                    <span class="me-1" v-if="!isMobile"><i class="bi bi-plus-circle-dotted"></i></span>
+                    <span class="me-1" v-if="!isMobile"
+                        ><i class="bi bi-plus-circle-dotted"></i
+                    ></span>
                     新聊天
                 </CButton>
             </div>
