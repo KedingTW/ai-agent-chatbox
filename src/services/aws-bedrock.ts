@@ -122,9 +122,6 @@ export class AWSBedrockService {
             }
 
             const duration = Date.now() - startTime
-            console.log('runtimeSessionId', response.runtimeSessionId)
-            console.log('sessionId', sessionId)
-            console.log('profile.sessionId', this.profile.sessionId)
 
             return {
                 success: true,
