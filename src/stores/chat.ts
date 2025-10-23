@@ -348,19 +348,6 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    const resetState = (): void => {
-        clearMessages()
-        clearError()
-        stopStreaming()
-        stateStore.isInitializing = true
-        updateStreamingStatus({
-            state: 'idle',
-            messageId: null,
-            progress: 0,
-            error: null,
-        })
-    }
-
     // Enhanced clear messages that also clears persistence
     const clearAllData = (): void => {
         // Clear messages and errors
@@ -432,7 +419,6 @@ export const useChatStore = defineStore('chat', () => {
         sendMessage,
 
         // Utility actions
-        resetState,
         clearAllData,
     }
 })
