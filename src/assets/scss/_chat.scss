@@ -49,10 +49,6 @@
         background-color: var(--cui-success);
     }
 
-    .statusBoxDisconnected {
-        background-color: var(--cui-danger);
-    }
-
     .statusBoxConnecting {
         background-color: var(--cui-warning);
         animation: pulse 1.5s infinite;
@@ -99,7 +95,7 @@
         }
     }
 }
-.dropdownItem{
+.dropdownItem {
     width: 100%;
     display: flex;
     text-decoration: none;
@@ -115,9 +111,7 @@
     }
 }
 
-.dropdownItem.active
-
-.statusBoxError {
+.dropdownItem.active .statusBoxError {
     background-color: #dc3545 !important;
     color: white !important;
 }

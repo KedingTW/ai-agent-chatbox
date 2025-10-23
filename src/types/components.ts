@@ -14,12 +14,6 @@ export interface MessageItemProps {
     onRetry?: EventHandler<string>
 }
 
-// Message list component props
-export interface MessageListProps {
-    messages: Message[]
-    isStreaming?: boolean
-}
-
 // Message input component props
 export interface MessageInputProps {
     disabled?: boolean

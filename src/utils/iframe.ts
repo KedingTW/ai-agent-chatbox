@@ -169,38 +169,3 @@ export function getNormalizedIframeConfig(): {
         profileId: normalizedProfileId,
     }
 }
-
-/**
- * 安全地獲取 iframe 配置，捕獲錯誤並返回錯誤資訊
- */
-export function safeGetIframeConfig(): {
-    success: boolean
-    config?: {
-        isIframe: boolean
-        profileId: string | null
-        hideMenu: boolean
-    }
-    error?: string
-    suggestedUrl?: string
-} {
-    try {
-        const config = getNormalizedIframeConfig()
-        return {
-            success: true,
-            config,
-        }
-    } catch (error) {
-        if (error instanceof IframeConfigError) {
-            return {
-                success: false,
-                error: error.message,
-                suggestedUrl: generateSuggestedUrl(),
-            }
-        }
-
-        return {
-            success: false,
-            error: '獲取 iframe 配置時發生未知錯誤',
-        }
-    }
-}

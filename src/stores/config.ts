@@ -1,11 +1,46 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { safeGetIframeConfig, isValidProfileId } from '@/utils/iframe'
-import type { AWSProfile } from '@/types/aws'
+import { getNormalizedIframeConfig, IframeConfigError, isValidProfileId } from '@/utils/iframe'
+import type { AWSProfile, ErrorContext } from '@/types/aws'
 
 export const useConfigStore = defineStore('config', () => {
+    /**
+     * 安全地獲取 iframe 配置，捕獲錯誤並返回錯誤資訊
+     */
+    const getIframeConfiguration = (): {
+        success: boolean
+        config?: {
+            isIframe: boolean
+            profileId: string | null
+            hideMenu: boolean
+        }
+        error?: string
+        suggestedUrl?: string
+    } => {
+        try {
+            const config = getNormalizedIframeConfig()
+            return {
+                success: true,
+                config,
+            }
+        } catch (error) {
+            if (error instanceof IframeConfigError) {
+                return {
+                    success: false,
+                    error: error.message,
+                    suggestedUrl: 'https://sample.com/?profile=profile1',
+                }
+            }
+
+            return {
+                success: false,
+                error: '獲取 iframe 配置時發生未知錯誤',
+            }
+        }
+    }
+
     // iframe 配置 - 使用安全的方式獲取
-    const iframeConfigResult = safeGetIframeConfig()
+    const iframeConfigResult = getIframeConfiguration()
     const iframeConfig = iframeConfigResult.success
         ? iframeConfigResult.config!
         : {
@@ -102,8 +137,12 @@ export const useConfigStore = defineStore('config', () => {
         return false
     }
 
-    const getProfileById = (profileId: string): AWSProfile | undefined => {
-        return profiles.value.find((profile) => profile.id === profileId)
+    const getProfileById = (profileId: string): AWSProfile => {
+        const profile = profiles.value.find((profile) => profile.id === profileId)
+        if (!profile) {
+            throw new Error(`Profile with ID '${profileId}' not found`)
+        }
+        return profile
     }
 
     // iframe 相關方法
@@ -113,6 +152,53 @@ export const useConfigStore = defineStore('config', () => {
 
     const setHideProfileMenu = (hide: boolean): void => {
         hideProfileMenu.value = hide
+    }
+
+    /**
+     * 初始化服務配置
+     * 驗證 iframe 配置和活動設定檔
+     */
+    const initializeService = async (): Promise<{
+        success: boolean
+        error?: ErrorContext
+    }> => {
+        try {
+            // 檢查 iframe 配置是否有效
+            const iframeResult = getIframeConfiguration()
+            if (!iframeResult.success) {
+                // iframe 配置無效，返回錯誤
+                const errorContext: ErrorContext = {
+                    type: 'validation',
+                    code: 'IFRAME_CONFIG_ERROR',
+                    message: iframeResult.error || '配置錯誤',
+                    timestamp: new Date(),
+                }
+                return { success: false, error: errorContext }
+            }
+
+            // 檢查是否有活動設定檔
+            if (!activeProfile.value) {
+                const errorContext: ErrorContext = {
+                    type: 'validation',
+                    code: 'NO_ACTIVE_PROFILE',
+                    message: 'No active profile found',
+                    timestamp: new Date(),
+                }
+                return { success: false, error: errorContext }
+            }
+
+            // 初始化成功
+            return { success: true }
+        } catch (error) {
+            const errorContext: ErrorContext = {
+                type: 'api',
+                code: 'INITIALIZATION_FAILED',
+                message:
+                    error instanceof Error ? error.message : 'Failed to initialize chat service',
+                timestamp: new Date(),
+            }
+            return { success: false, error: errorContext }
+        }
     }
 
     return {
@@ -128,5 +214,7 @@ export const useConfigStore = defineStore('config', () => {
         getProfileById,
         setIframeMode,
         setHideProfileMenu,
+        getIframeConfiguration,
+        initializeService,
     }
 })

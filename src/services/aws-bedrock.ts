@@ -12,17 +12,16 @@ import {
 import type {
     ErrorContext,
     SendMessageResponse,
-    ConnectionStatus,
-    Result,
-    StreamEvent,
+    // ConnectionStatus,
 } from '@/types'
 import { classifyError } from '@/types'
 import { getAWSCredentialsConfigFromProfile } from '@/config/aws'
 import type { AWSProfile } from '@/types/aws'
+import { extractTextFromEvent, getErrorCode, getErrorMessage } from '@/helpers/aws-bedrock'
 
 export class AWSBedrockService {
     private client: BedrockAgentCoreClient | null = null
-    private connectionStatus: ConnectionStatus
+    // private connectionStatus: ConnectionStatus
     private initializationPromise: Promise<void> | null = null
     private profile: AWSProfile
 
@@ -31,145 +30,23 @@ export class AWSBedrockService {
             throw new Error('Profile iss not found.')
         }
         // 確認是否有選擇設定檔
-        this.profile = profile || null
-
-        // Initialize connection status
-        this.connectionStatus = {
-            isConnected: false,
-            lastConnected: null,
-            connectionAttempts: 0,
-            latency: null,
-        }
-
-        // Initialize client asynchronously
-        this.initializationPromise = this.initializeClient()
-    }
-
-    /**
-     * Initialize the AWS Bedrock client
-     */
-    private async initializeClient(): Promise<void> {
-        try {
-            if (!this.profile) {
-                throw new Error('Profile is not initialized')
-            }
-            // 根據設定檔（Profile）或預設值（Default）取得憑證配置
-            const credentialsConfig = getAWSCredentialsConfigFromProfile(this.profile)
-
-            this.client = new BedrockAgentCoreClient({
-                region: this.profile.region,
-                ...credentialsConfig,
-                maxAttempts: 3,
-                requestHandler: {
-                    requestTimeout: 30000, // 30 seconds
-                },
-            })
-
-            // Mark as connected - actual connection will be tested on first API call
-            this.updateConnectionStatus({ isConnected: true })
-        } catch (error) {
-            this.updateConnectionStatus({ isConnected: false })
-            const errorMessage =
-                error instanceof Error ? error.message : 'Client initialization failed'
-            throw new Error(`AWS Bedrock client initialization failed: ${errorMessage}`)
-        }
-    }
-
-    /**
-     * Ensure the client is initialized before use
-     */
-    private async ensureInitialized(): Promise<void> {
-        if (this.initializationPromise) {
-            await this.initializationPromise
-            this.initializationPromise = null
-        }
-
-        if (!this.client) {
-            throw new Error('AWS Bedrock client is not initialized')
-        }
-    }
-
-    /**
-     * Update connection status
-     */
-    private updateConnectionStatus(updates: Partial<ConnectionStatus>): void {
-        this.connectionStatus = { ...this.connectionStatus, ...updates }
-
-        if (updates.isConnected === true) {
-            this.connectionStatus.lastConnected = new Date()
-            this.connectionStatus.connectionAttempts = 0
-        } else if (updates.isConnected === false) {
-            this.connectionStatus.connectionAttempts++
-        }
-    }
-
-    /**
-     * Get current connection status
-     */
-    getConnectionStatus(): ConnectionStatus {
-        return { ...this.connectionStatus }
-    }
-
-    /**
-     * Check if the service is ready to use
-     */
-    async isReady(): Promise<boolean> {
-        try {
-            await this.ensureInitialized()
-            return this.connectionStatus.isConnected && this.client !== null
-        } catch {
-            return false
-        }
-    }
-
-    /**
-     * Reconnect to AWS Bedrock
-     */
-    async reconnect(): Promise<Result<boolean, ErrorContext>> {
-        try {
-            this.client = null
-            this.initializationPromise = this.initializeClient()
-            await this.initializationPromise
-            this.initializationPromise = null
-
-            return {
-                success: true,
-                data: this.connectionStatus.isConnected,
-            }
-        } catch (error) {
-            const errorContext: ErrorContext = {
-                type: classifyError(error),
-                code: 'RECONNECTION_FAILED',
-                message: error instanceof Error ? error.message : 'Reconnection failed',
-                timestamp: new Date(),
-                retryable: true,
-            }
-
-            return {
-                success: false,
-                error: errorContext,
-            }
-        }
+        this.profile = profile
     }
 
     /**
      * Get the initialized client (for internal use)
      */
     async getClient(): Promise<BedrockAgentCoreClient> {
-        await this.ensureInitialized()
-        if (!this.client) {
-            throw new Error('AWS Bedrock client is not available')
-        }
-        return this.client
-    }
+        const credentialsConfig = getAWSCredentialsConfigFromProfile(this.profile)
 
-    /**
-     * Dispose of the service and clean up resources
-     */
-    dispose(): void {
-        this.client = null
-        this.initializationPromise = null
-        this.updateConnectionStatus({ isConnected: false })
+        return new BedrockAgentCoreClient({
+            region: this.profile.region,
+            ...credentialsConfig,
+            maxAttempts: 3,
+            requestHandler: {
+                requestTimeout: 30000, // 30 seconds
+            },
+        })
     }
 
     /**
@@ -205,7 +82,6 @@ export class AWSBedrockService {
                 code: 'INVALID_MESSAGE',
                 message: 'Message cannot be empty',
                 timestamp: new Date(),
-                retryable: false,
             }
             onError?.(errorContext)
             return {
@@ -217,7 +93,6 @@ export class AWSBedrockService {
 
         try {
             // Ensure client is ready
-            await this.ensureInitialized()
             const client = await this.getClient()
 
             // Create command
@@ -227,9 +102,6 @@ export class AWSBedrockService {
             // Send the message and get streaming response
             const startTime = Date.now()
             const response: InvokeAgentRuntimeCommandOutput = await client.send(command)
-
-            // Update connection status
-            this.updateConnectionStatus({ isConnected: true })
 
             // Handle streaming response
             if (!response.response) {
@@ -250,7 +122,6 @@ export class AWSBedrockService {
             }
 
             const duration = Date.now() - startTime
-            this.updateConnectionStatus({ latency: duration })
             console.log('runtimeSessionId', response.runtimeSessionId)
             console.log('sessionId', sessionId)
             console.log('profile.sessionId', this.profile.sessionId)
@@ -263,17 +134,14 @@ export class AWSBedrockService {
                 streamingResponse: response.response,
             }
         } catch (error) {
-            this.updateConnectionStatus({ isConnected: false })
-
             const errorContext: ErrorContext = {
                 type: classifyError(error),
-                code: this.getErrorCode(error),
-                message: this.getErrorMessage(error),
+                code: getErrorCode(error),
+                message: getErrorMessage(error),
                 details: {
                     originalError: error instanceof Error ? error.message : String(error),
                 },
                 timestamp: new Date(),
-                retryable: ['network', 'api'].includes(classifyError(error)),
             }
 
             onError?.(errorContext)
@@ -335,7 +203,6 @@ export class AWSBedrockService {
                 message:
                     error instanceof Error ? error.message : 'ReadableStream processing failed',
                 timestamp: new Date(),
-                retryable: false,
             }
             onError?.(errorContext)
         }
@@ -427,7 +294,7 @@ export class AWSBedrockService {
                                 // Try to parse as JSON for other formats
                                 try {
                                     const parsedData = JSON.parse(eventData)
-                                    const textContent = this.extractTextFromEvent(parsedData)
+                                    const textContent = extractTextFromEvent(parsedData)
                                     if (textContent) {
                                         onChunk?.(textContent)
                                     }
@@ -451,114 +318,8 @@ export class AWSBedrockService {
                 code: 'SSE_PARSING_ERROR',
                 message: error instanceof Error ? error.message : 'SSE parsing failed',
                 timestamp: new Date(),
-                retryable: false,
             }
             onError?.(errorContext)
         }
-    }
-
-    /**
-     * Extract text content from parsed event data
-     */
-    private extractTextFromEvent(eventData: StreamEvent): string | null {
-        // Handle different event types
-        if (eventData.event) {
-            const event = eventData.event
-
-            // Handle contentBlockDelta events
-            if (event.contentBlockDelta?.delta?.text) {
-                return event.contentBlockDelta.delta.text
-            }
-
-            // Handle chunk events
-            if (event.chunk?.bytes) {
-                const decoder = new TextDecoder('utf-8')
-                return decoder.decode(new Uint8Array(event.chunk.bytes))
-            }
-
-            // Handle messageStart, messageStop, etc.
-            if (
-                event.messageStart ||
-                event.messageStop ||
-                event.contentBlockStart ||
-                event.contentBlockStop
-            ) {
-                return null // These are control events, no text content
-            }
-        }
-
-        // If it's a simple text response
-        if (typeof eventData === 'string') {
-            return eventData
-        }
-
-        return null
-    }
-
-    /**
-     * Get error code from AWS error
-     */
-    private getErrorCode(error: unknown): string {
-        if (error && typeof error === 'object' && 'name' in error) {
-            return (error as { name: string }).name
-        }
-        if (error && typeof error === 'object' && 'code' in error) {
-            return (error as { code: string }).code
-        }
-        return 'UNKNOWN_ERROR'
-    }
-
-    /**
-     * Get user-friendly error message
-     */
-    private getErrorMessage(error: unknown): string {
-        console.error(error)
-        if (error instanceof Error) {
-            // Map common AWS errors to user-friendly messages
-            if (
-                error.message.includes('UnauthorizedOperation') ||
-                error.message.includes('AccessDenied')
-            ) {
-                return 'Authentication failed. Please check your AWS credentials.'
-            }
-            if (
-                error.message.includes('ThrottlingException') ||
-                error.message.includes('TooManyRequests')
-            ) {
-                return 'Too many requests. Please wait a moment and try again.'
-            }
-            if (
-                error.message.includes('ServiceUnavailable') ||
-                error.message.includes('InternalError')
-            ) {
-                return 'AWS service is temporarily unavailable. Please try again later.'
-            }
-            if (error.message.includes('ValidationException')) {
-                return 'Invalid request format. Please check your message and try again.'
-            }
-            if (error.message.includes('ResourceNotFound')) {
-                return 'AWS Bedrock agent not found. Please check your configuration.'
-            }
-            if (
-                error.message.includes('NetworkingError') ||
-                error.message.includes('TimeoutError')
-            ) {
-                return 'Network connection failed. Please check your internet connection.'
-            }
-
-            return error.message
-        }
-
-        return 'An unknown error occurred while sending the message.'
-    }
-
-    /**
-     * Cancel an ongoing request (placeholder for future implementation)
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async cancelRequest(_messageId: string): Promise<boolean> {
-        // This would be implemented to cancel ongoing requests
-        // For now, it's a placeholder
-        return false
     }
 }

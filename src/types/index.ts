@@ -24,7 +24,7 @@ export type {
 export type { Result, EventHandler } from './utils'
 
 // Component types
-export type { MessageItemProps, MessageListProps, MessageInputProps } from './components'
+export type { MessageItemProps, MessageInputProps } from './components'
 
 // Type guards and validation utilities
 export {

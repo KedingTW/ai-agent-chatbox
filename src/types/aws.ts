@@ -28,7 +28,6 @@ export interface ChatState {
     isStreaming: boolean
     currentStreamingMessageId: string | null
     error: string | null
-    isConnected: boolean
 }
 
 export interface AWSError {
@@ -96,7 +95,6 @@ export interface ErrorContext {
     message: string
     details?: Record<string, unknown>
     timestamp: Date
-    retryable: boolean
 }
 
 export interface UserMessage extends Message {

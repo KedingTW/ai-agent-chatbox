@@ -50,11 +50,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
-import { awsServiceManager } from '@/services/aws-service-manager'
-import { safeGetIframeConfig } from '@/utils/iframe'
+import { useStateStore } from '@/stores/state'
+// Removed AWSServiceManager import - now using on-demand client creation
 
 const configStore = useConfigStore()
 const chatStore = useChatStore()
+const stateStore = useStateStore()
 
 // iframe 配置錯誤狀態
 const iframeConfigError = ref<string | null>(null)
@@ -76,18 +77,16 @@ const displayTitle = computed(() => {
 
 const connectionStatusText = computed(() => {
     if (iframeConfigError.value) return '配置錯誤'
-    if (chatStore.isInitializing) return '連線中'
-    if (!chatStore.isConnected) return '已斷線'
-    if (chatStore.isStreaming) return '回應中'
+    if (stateStore.isInitializing) return '連線中'
+    if (stateStore.isStreaming) return '回應中'
     return '已上線'
 })
 
 const getStatusIndicatorClass = computed(() => {
     const baseClass = 'statusBox'
     if (iframeConfigError.value) return `${baseClass} statusBoxError`
-    if (chatStore.isInitializing) return `${baseClass} statusBoxConnecting`
-    if (!chatStore.isConnected) return `${baseClass} statusBoxDisconnected`
-    if (chatStore.isStreaming) return `${baseClass} statusBoxStreaming`
+    if (stateStore.isInitializing) return `${baseClass} statusBoxConnecting`
+    if (stateStore.isStreaming) return `${baseClass} statusBoxStreaming`
     return `${baseClass} statusBoxConnected`
 })
 
@@ -99,7 +98,7 @@ const handleProfileSwitch = async (profileId: string) => {
 
     try {
         // 設置初始化狀態
-        chatStore.setInitializing(true)
+        stateStore.isInitializing = true
 
         // 切換新的設定檔
         const success = configStore.switchProfile(profileId)
@@ -107,18 +106,8 @@ const handleProfileSwitch = async (profileId: string) => {
         if (success) {
             // 設定檔切換成功，清除聊天記錄
             chatStore.startNewSession()
-
-            // 重新初始化 AWS 服務
-            const result = await awsServiceManager.switchProfile(profileId)
-
-            if (result.success) {
-                // 服務初始化成功，連接狀態
-                chatStore.connect()
-            } else {
-                // 服務初始化失敗
-                console.error('AWS 服務初始化失敗:', result.error?.message)
-                chatStore.setError(result.error || null)
-            }
+            // No need to initialize AWS service - it will be created on-demand when sending messages
+            chatStore.clearError()
         } else {
             console.error('設定檔切換失敗')
         }
@@ -129,18 +118,17 @@ const handleProfileSwitch = async (profileId: string) => {
             code: 'PROFILE_SWITCH_ERROR',
             message: error instanceof Error ? error.message : '設定檔切換失敗',
             timestamp: new Date(),
-            retryable: true,
         })
     } finally {
         // 結束初始化狀態
-        chatStore.setInitializing(false)
+        stateStore.isInitializing = false
     }
 }
 
 // 檢查 iframe 配置
 onMounted(() => {
     // 檢查 iframe 配置是否有效
-    const iframeResult = safeGetIframeConfig()
+    const iframeResult = configStore.getIframeConfiguration()
     if (!iframeResult.success) {
         // iframe 配置無效，設置錯誤狀態
         iframeConfigError.value = iframeResult.error || '配置錯誤'
@@ -151,7 +139,6 @@ onMounted(() => {
             code: 'IFRAME_CONFIG_ERROR',
             message: iframeResult.error || '配置錯誤',
             timestamp: new Date(),
-            retryable: false,
         })
         // 不初始化 AWS 服務
         console.error('iframe 配置錯誤:', iframeResult.error)

@@ -14,16 +14,8 @@
         </div>
         <div class="errorBannerActions">
             <button
-                v-if="error.retryable"
-                class="btn btn-sm btn-outline-danger me-2"
-                @click="chatStore.clearError"
-                type="button"
-            >
-                Retry
-            </button>
-            <button
                 class="btn btn-sm btn-outline-danger"
-                @click="chatStore.clearError"
+                @click="handleReload"
                 type="button"
                 aria-label="Dismiss error"
             >
@@ -34,9 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { useChatStore } from '@/stores/chat'
+import { useStateStore } from '@/stores/state'
 import { computed } from 'vue'
 
-const chatStore = useChatStore()
-const error = computed(() => chatStore.error)
+const stateStore = useStateStore()
+const error = computed(() => stateStore.error)
+const handleReload = () => {
+    window.location.reload()
+}
 </script>

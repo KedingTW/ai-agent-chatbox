@@ -40,11 +40,10 @@
 
             <!-- Messages -->
             <MessageItem
-                v-for="message in messages"
+                v-for="message in chatStore.messages"
                 :key="message.id"
                 :message="message"
                 :is-streaming="chatStore.messages && message.id === currentStreamingMessageId"
-                @retry="handleMessageRetry"
             />
         </div>
     </div>
@@ -52,25 +51,20 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
-import type { MessageListProps } from '@/types'
 import MessageItem from './MessageItem.vue'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
+import { useStateStore } from '@/stores/state'
 
 const chatStore = useChatStore()
 const configStore = useConfigStore()
+const stateStore = useStateStore()
 const activeProfile = computed(() => configStore.activeProfile)
 const displayDesc = computed(() => {
     // 目前設定檔description，若無設定檔則顯示預設標題
     return activeProfile.value?.description || 'AI Assistant'
 })
 // Props
-const props = withDefaults(defineProps<MessageListProps>(), {})
-
-// Emits
-const emit = defineEmits<{
-    messageRetry: [messageId: string]
-}>()
 
 // Refs
 const containerRef = ref<HTMLElement>()
@@ -82,13 +76,13 @@ const showScrollButton = ref(false)
 const currentStreamingMessageId = ref<string | null>(null)
 
 // Computed properties
-const hasMessages = computed(() => props.messages.length > 0)
+const hasMessages = computed(() => chatStore.messages.length > 0)
 
 const containerClasses = computed(() => [
     'messageList',
     {
         messageListEmpty: !hasMessages.value,
-        messageListStreaming: props.isStreaming,
+        messageListStreaming: stateStore.isStreaming,
     },
 ])
 
@@ -121,13 +115,9 @@ const handleScroll = () => {
     showScrollButton.value = !isAtBottom.value && hasMessages.value
 }
 
-const handleMessageRetry = (messageId: string) => {
-    emit('messageRetry', messageId)
-}
-
 // Auto-scroll when new messages arrive
 watch(
-    () => props.messages.length,
+    () => chatStore.messages.length,
     async (newLength, oldLength) => {
         if (newLength > oldLength) {
             await nextTick()
@@ -138,7 +128,7 @@ watch(
 
 // Auto-scroll when streaming starts/updates
 watch(
-    () => props.isStreaming,
+    () => stateStore.isStreaming,
     async (isStreaming) => {
         if (isStreaming) {
             await nextTick()
@@ -149,7 +139,7 @@ watch(
 
 // Track current streaming message
 watch(
-    () => props.messages,
+    () => chatStore.messages,
     (messages) => {
         const streamingMessage = messages.find((m) => m.isStreaming)
         currentStreamingMessageId.value = streamingMessage?.id || null
@@ -160,7 +150,7 @@ watch(
 watch(
     // 當AI回復完成後，要滾至最下方
     () => {
-        const lastMessage = props.messages[props.messages.length - 1]
+        const lastMessage = chatStore.messages[chatStore.messages.length - 1]
         // 我們只需要追蹤 AI agent 的訊息完成狀態
         if (lastMessage && lastMessage.sender === 'agent') {
             return lastMessage.isComplete

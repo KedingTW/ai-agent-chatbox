@@ -67,16 +67,15 @@ import { computed } from 'vue'
 import { VMarkdownView } from 'vue3-markdown'
 import 'vue3-markdown/dist/vue3-markdown.css'
 import type { MessageItemProps } from '@/types'
+import { useChatStore } from '@/stores/chat'
 
 // Props
 const props = withDefaults(defineProps<MessageItemProps>(), {
     isStreaming: false,
 })
 
-// Emits
-const emit = defineEmits<{
-    retry: [messageId: string]
-}>()
+// Store
+const chatStore = useChatStore()
 
 // Computed properties
 const isUserMessage = computed(() => props.message.sender === 'user')
@@ -167,10 +166,12 @@ const streamingIndicatorClasses = computed(() => [
 ])
 
 // Event handlers
-const handleRetry = () => {
+const handleRetry = async () => {
     if (props.onRetry) {
         props.onRetry(props.message.id)
     }
-    emit('retry', props.message.id)
+    if (props.message.sender === 'user') {
+        await chatStore.sendMessage(props.message.content)
+    }
 }
 </script>

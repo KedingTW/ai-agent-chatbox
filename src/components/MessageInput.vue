@@ -8,7 +8,7 @@
                     v-model="inputValue"
                     :class="textareaClasses"
                     :placeholder="placeholder"
-                    :disabled="chatStore.isStreaming || disabled || !chatStore.canSendMessage"
+                    :disabled="stateStore.isStreaming || disabled || !chatStore.canSendMessage"
                     rows="3"
                     @keydown="handleKeyDown"
                     @focus="handleFocus"
@@ -18,7 +18,7 @@
                     aria-label="Type your message"
                 />
                 <button
-                    v-if="!chatStore.isStreaming"
+                    v-if="!stateStore.isStreaming"
                     :class="sendButtonClasses"
                     :disabled="!chatStore.canSendMessage"
                     type="submit"
@@ -57,6 +57,7 @@
 import { ref, computed, watch } from 'vue'
 import type { MessageInputProps } from '@/types'
 import { useChatStore } from '@/stores/chat'
+import { useStateStore } from '@/stores/state'
 
 // Props
 const props = withDefaults(defineProps<MessageInputProps>(), {
@@ -73,6 +74,7 @@ const emit = defineEmits<{
 }>()
 
 const chatStore = useChatStore()
+const stateStore = useStateStore()
 
 // Refs
 const textareaRef = ref<HTMLTextAreaElement>()
@@ -100,9 +102,8 @@ const canSend = computed(() => {
 })
 
 const placeholder = computed(() => {
-    if (chatStore.isInitializing) return '連線中...'
-    if (!chatStore.isConnected) return '已斷線'
-    if (chatStore.isStreaming) return '回應中'
+    if (stateStore.isInitializing) return '連線中...'
+    if (stateStore.isStreaming) return '回應中'
     return '請說明你的問題...'
 })
 

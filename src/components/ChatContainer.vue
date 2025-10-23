@@ -3,7 +3,7 @@
         <!-- Main chat area -->
         <div class="chatMain flex-grow-1 d-flex flex-column overflow-hidden">
             <!-- Message list -->
-            <MessageList :messages="messages" @message-retry="handleMessageRetry" />
+            <MessageList />
         </div>
 
         <!-- Input area -->
@@ -15,123 +15,51 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useChatStore } from '@/stores/chat'
-import { awsServiceManager } from '@/services/aws-service-manager'
-import { safeGetIframeConfig } from '@/utils/iframe'
+import { useStateStore } from '@/stores/state'
 import type { ErrorContext } from '@/types'
 import MessageList from './MessageList.vue'
 import MessageInput from './MessageInput.vue'
 import LoadingOverlay from './LoadingOverlay.vue'
+import { useConfigStore } from '@/stores/config'
 
 // Store
 const chatStore = useChatStore()
-
-// Computed properties from store
-const messages = computed(() => chatStore.messages)
-const canSendMessage = computed(() => chatStore.canSendMessage)
+const configStore = useConfigStore()
+const stateStore = useStateStore()
 
 // CSS Class functions
 const getContainerClass = () => {
     let classes = 'chatContainer'
-    if (chatStore.isStreaming) classes += ' chatContainerStreaming'
-    if (chatStore.error) classes += ' chatContainerError'
-    if (chatStore.isInitializing) classes += ' chatContainerInitializing'
+    if (stateStore.isStreaming) classes += ' chatContainerStreaming'
+    if (stateStore.error) classes += ' chatContainerError'
+    if (stateStore.isInitializing) classes += ' chatContainerInitializing'
     return classes
 }
 
 // Methods
 const initializeService = async () => {
     try {
-        chatStore.setInitializing(true)
+        stateStore.isInitializing = true
 
-        // 檢查 iframe 配置是否有效
-        const iframeResult = safeGetIframeConfig()
-        if (!iframeResult.success) {
-            // iframe 配置無效，設置錯誤狀態但不初始化 AWS
-            const errorContext: ErrorContext = {
-                type: 'validation',
-                code: 'IFRAME_CONFIG_ERROR',
-                message: iframeResult.error || '配置錯誤',
-                timestamp: new Date(),
-                retryable: false,
-            }
-            chatStore.setError(errorContext)
+        // 使用 configStore 的初始化方法
+        const result = await configStore.initializeService()
+
+        if (!result.success && result.error) {
+            chatStore.setError(result.error)
             return
         }
 
-        const result = await awsServiceManager.initialize()
-        if (result.success) {
-            chatStore.connect()
-        } else {
-            chatStore.setError(result.error || null)
-        }
-    } catch (error) {
-        const errorContext: ErrorContext = {
-            type: 'api',
-            code: 'INITIALIZATION_FAILED',
-            message: error instanceof Error ? error.message : 'Failed to initialize chat service',
-            timestamp: new Date(),
-            retryable: true,
-        }
-        chatStore.setError(errorContext)
+        // 初始化成功，清除錯誤
+        chatStore.clearError()
     } finally {
-        chatStore.setInitializing(false)
+        stateStore.isInitializing = false
     }
 }
 
 const handleSendMessage = async (message: string) => {
-    const awsService = awsServiceManager.getBedrockService()
-
-    if (!awsService || !canSendMessage.value) {
-        console.log('Cannot send message - service not ready or not allowed')
-        return
-    }
-
-    try {
-        // Add user message to store
-        const userMessage = chatStore.addUserMessage(message)
-        if (!userMessage) return
-
-        // Add placeholder agent message for streaming
-        const agentMessage = chatStore.addAgentMessage('', true)
-        if (!agentMessage) return
-
-        // Send message with streaming
-        await awsService.sendMessageWithStreaming(
-            message,
-            chatStore.currentSession.id,
-            // onChunk
-            (chunk: string) => {
-                chatStore.appendToMessage(agentMessage.id, chunk)
-            },
-            // onComplete
-            () => {
-                chatStore.completeMessage(agentMessage.id)
-            },
-            // onError
-            (error: ErrorContext) => {
-                chatStore.setError(error)
-                chatStore.removeMessage(agentMessage.id)
-            },
-        )
-    } catch (error) {
-        const errorContext: ErrorContext = {
-            type: 'api',
-            code: 'SEND_MESSAGE_FAILED',
-            message: error instanceof Error ? error.message : 'Failed to send message',
-            timestamp: new Date(),
-            retryable: true,
-        }
-        chatStore.setError(errorContext)
-    }
-}
-
-const handleMessageRetry = async (messageId: string) => {
-    const message = messages.value.find((m) => m.id === messageId)
-    if (message && message.sender === 'user') {
-        await handleSendMessage(message.content)
-    }
+    await chatStore.sendMessage(message)
 }
 
 // Lifecycle
@@ -151,7 +79,6 @@ const handleError = (error: Error) => {
         code: 'COMPONENT_ERROR',
         message: 'An unexpected error occurred in the chat interface',
         timestamp: new Date(),
-        retryable: false,
     }
     chatStore.setError(errorContext)
 }

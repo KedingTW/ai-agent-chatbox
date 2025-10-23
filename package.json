@@ -1,5 +1,5 @@
 {
-    "name": "ai-agent-chatbox-poc",
+    "name": "ai-agent-chatbox",
     "version": "0.0.0",
     "private": true,
     "type": "module",

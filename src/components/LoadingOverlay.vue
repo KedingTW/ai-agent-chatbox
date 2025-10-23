@@ -1,6 +1,6 @@
 <template>
     <div
-        v-if="chatStore.isInitializing"
+        v-if="stateStore.isInitializing"
         class="loading-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-90"
         role="status"
         :aria-label="ariaLabel"
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { useChatStore } from '@/stores/chat'
+import { useStateStore } from '@/stores/state'
 
 interface LoadingOverlayProps {
     ariaLabel?: string
@@ -25,5 +25,5 @@ withDefaults(defineProps<LoadingOverlayProps>(), {
     ariaLabel: 'Loading content',
 })
 
-const chatStore = useChatStore()
+const stateStore = useStateStore()
 </script>
