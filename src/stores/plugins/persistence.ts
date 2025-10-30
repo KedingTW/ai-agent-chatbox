@@ -58,7 +58,7 @@ const loadState = (): PersistedChatState | null => {
 
         // Convert timestamp strings back to Date objects
         const data = parsed.data as PersistedChatState
-        data.messages = data.messages.map(message => ({
+        data.messages = data.messages.map((message) => ({
             ...message,
             timestamp: new Date(message.timestamp),
         }))
@@ -139,18 +139,21 @@ export const chatPersistencePlugin = ({ store }: PiniaPluginContext) => {
     }
 
     // Save state whenever it changes
-    store.$subscribe((mutation, state) => {
-        // Only save if there are messages to persist
-        if (state.messages.length > 0) {
-            const stateToSave: PersistedChatState = {
-                messages: state.messages,
-                currentSession: state.currentSession,
-                connectionStatus: state.connectionStatus,
-                lastSaved: new Date().toISOString(),
+    store.$subscribe(
+        (mutation, state) => {
+            // Only save if there are messages to persist
+            if (state.messages.length > 0) {
+                const stateToSave: PersistedChatState = {
+                    messages: state.messages,
+                    currentSession: state.currentSession,
+                    connectionStatus: state.connectionStatus,
+                    lastSaved: new Date().toISOString(),
+                }
+                saveState(stateToSave)
             }
-            saveState(stateToSave)
-        }
-    }, { detached: true })
+        },
+        { detached: true },
+    )
 
     // Add method to manually clear persisted data
     store.clearPersistedData = clearPersistedState

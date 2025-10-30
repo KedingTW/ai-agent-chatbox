@@ -60,3 +60,4 @@ npx ampx sandbox delete --profile <profile> # Delete AWS sandbox
 - 100 character line width
 - Prefer `const` over `let`, avoid `var`
 - Use TypeScript strict mode
+- CSS class naming: camelCase (e.g., `chatContainer`)

@@ -2,10 +2,16 @@
  * AWS Bedrock Agent Runtime types and interfaces
  */
 
-export interface AWSConfig {
+export interface AWSProfile {
+    id: string
+    name: string
+    title: string
+    accessKeyId: string
+    secretAccessKey: string
     region: string
-    agentArn: string
+    bedrockAgentArn: string
     sessionId: string
+    description: string
 }
 
 export interface Message {
@@ -22,7 +28,6 @@ export interface ChatState {
     isStreaming: boolean
     currentStreamingMessageId: string | null
     error: string | null
-    isConnected: boolean
 }
 
 export interface AWSError {
@@ -32,38 +37,6 @@ export interface AWSError {
 }
 
 export type MessageSender = 'user' | 'agent'
-
-// Streaming event types
-export interface StreamEvent {
-    event?: {
-        contentBlockDelta?: {
-            delta?: {
-                text?: string
-            }
-        }
-        chunk?: {
-            bytes?: Uint8Array
-        }
-        messageStart?: boolean
-        messageStop?: boolean
-        contentBlockStart?: boolean
-        contentBlockStop?: boolean
-    }
-    contentBlockDelta?: {
-        delta?: {
-            text?: string
-        }
-    }
-    chunk?: {
-        bytes?: Uint8Array
-    }
-    messageStart?: boolean
-    messageStop?: boolean
-    contentBlockStart?: boolean
-    contentBlockStop?: boolean
-    text?: string
-    content?: string | unknown
-}
 
 // Streaming state types
 export type StreamingState = 'idle' | 'connecting' | 'streaming' | 'complete' | 'error'
@@ -90,7 +63,6 @@ export interface ErrorContext {
     message: string
     details?: Record<string, unknown>
     timestamp: Date
-    retryable: boolean
 }
 
 export interface UserMessage extends Message {

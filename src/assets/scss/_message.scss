@@ -1,0 +1,484 @@
+.messageList {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--cui-primary-50);
+    overflow: hidden;
+    position: relative;
+
+    &Empty {
+        justify-content: center;
+        align-items: center;
+    }
+
+    &Streaming {
+        border-color: var(--cui-info);
+    }
+
+    .emptyState {
+        color: var(--cui-gray-600);
+
+        &Icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+            color: var(--cui-primary);
+        }
+
+        &Title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+            color: var(--cui-primary);
+        }
+
+        &Subtitle {
+            font-size: 0.875rem;
+            opacity: 0.5;
+            color: var(--cui-primary);
+        }
+    }
+}
+
+.messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    scroll-behavior: smooth;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--cui-gray-100);
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--cui-gray-300);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--cui-gray-400);
+    }
+}
+
+.messageItem {
+    display: flex;
+    margin-bottom: 1rem;
+    max-width: 100%;
+    animation: messageAppear 0.3s ease-out;
+
+    &User {
+        justify-content: flex-end;
+
+        // 調整使用者訊息內容的順序與對齊
+        .messageContent {
+            order: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .messageAvatar {
+            order: 2;
+        }
+        .messageRetryButton {
+            align-self: flex-end;
+        }
+    }
+
+    &Agent {
+        justify-content: flex-start;
+    }
+
+    &Streaming {
+        animation: none;
+    }
+
+    &Failed {
+        opacity: 0.7;
+    }
+}
+
+.messageAvatar {
+    flex-shrink: 0;
+    margin: 0 0.5rem;
+    order: 1;
+
+    &Icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        background-color: var(--cui-gray-200);
+        color: var(--cui-gray-700);
+
+        &User {
+            background-color: var(--cui-primary);
+            color: white;
+        }
+
+        &Agent {
+            background-color: var(--cui-primary-100);
+            color: white;
+        }
+    }
+}
+
+.messageContent {
+    flex: 1;
+    max-width: 70%;
+    order: 2;
+}
+
+.messageBubble {
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    word-wrap: break-word;
+    position: relative;
+    transition: all 0.2s ease;
+
+    &User {
+        border-top-right-radius: 5px;
+        background-color: var(--cui-primary);
+        color: white;
+    }
+
+    &Agent {
+        padding: 1rem;
+        border-top-left-radius: 5px;
+        background-color: #fff;
+        color: var(--cui-gray-800);
+    }
+
+    &Streaming {
+        box-shadow: 0 0 0 2px rgba(var(--cui-primary-rgb), 0.1);
+    }
+
+    &Failed {
+        background-color: rgba(var(--cui-danger-rgb), 0.1);
+    }
+}
+
+.messageTextUser {
+    color: white;
+}
+
+.messageTextAgent {
+    color: var(--cui-gray-800);
+}
+
+.messageTimestamp {
+    font-size: 0.75rem;
+    color: var(--cui-gray-500);
+    margin-top: 0.25rem;
+    cursor: help;
+
+    &User {
+        text-align: right;
+    }
+
+    &Agent {
+        text-align: left;
+    }
+}
+
+.messageRetryButton {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    align-self: flex-start;
+}
+
+.streamingIndicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    &Visible {
+        opacity: 1;
+    }
+
+    .streamingDot {
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 50%;
+        background-color: currentColor;
+        opacity: 0.4;
+        animation: streamingPulse 1.4s infinite ease-in-out;
+
+        &:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        &:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+    }
+}
+
+.loadMoreButton {
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--cui-primary);
+        outline-offset: 2px;
+    }
+}
+
+.scrollToBottom {
+    bottom: 200px;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--cui-primary);
+        outline-offset: 2px;
+    }
+}
+
+.scrollButtonEnterActive,
+.scrollButtonLeaveActive {
+    transition: all 0.3s ease;
+}
+
+.scrollButtonEnterFrom,
+.scrollButtonLeaveTo {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.8);
+}
+
+@keyframes messageAppear {
+    from {
+        opacity: 0;
+        transform: translateY(1rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes streamingPulse {
+    0%,
+    80%,
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+
+    40% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@media (max-width: 768px) {
+    .messageContent {
+        max-width: 85%;
+    }
+
+    .messageAvatar {
+        margin: 0 0.25rem;
+
+        &Icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    .messageBubble {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .messages {
+        padding: 1rem;
+    }
+
+    .scrollToBottom {
+        right: 0.5rem;
+    }
+
+    .messageList .emptyState {
+        &Icon {
+            font-size: 2rem;
+        }
+
+        &Title {
+            font-size: 1rem;
+        }
+
+        &Subtitle {
+            font-size: 0.75rem;
+        }
+    }
+}
+
+@media (prefers-contrast: high) {
+    .messageList {
+        border-width: 2px;
+    }
+
+    .messageBubbleAgent {
+        border-width: 2px;
+    }
+
+    .messageBubbleUser {
+        border: 2px solid var(--cui-primary-dark);
+    }
+
+    .scrollToBottom {
+        border: 2px solid var(--cui-primary-dark);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .messageItem {
+        animation: none;
+    }
+
+    .messageBubble {
+        transition: none;
+    }
+
+    .streamingIndicator .streamingDot {
+        animation: none;
+        opacity: 0.7;
+    }
+
+    .messages {
+        scroll-behavior: auto;
+    }
+
+    .scrollButtonEnterActive,
+    .scrollButtonLeaveActive {
+        transition: none;
+    }
+
+    .loadMoreButton:hover:not(:disabled) {
+        transform: none;
+    }
+
+    .scrollToBottom:hover {
+        transform: none;
+    }
+
+    // 針對動畫按鈕的優化
+    .messageInputSendBtn:hover:not(:disabled) {
+        transform: none;
+    }
+
+    // 如果您想對輸入框或整個群組禁用過渡效果：
+    // 假設 .messageInputTextarea 有其他 transition 屬性
+    .messageInputGroup {
+        transition: none;
+
+        .messageInputTextarea {
+            transition: none;
+        }
+    }
+}
+.messageInput {
+    padding: 1rem 1rem 0 1rem;
+    background-color: var(--cui-primary-50);
+}
+.messageInputGroup {
+    position: relative;
+
+    .messageInputTextarea {
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        min-height: 150px;
+        width: 100%;
+
+        // 變體和狀態
+        &Single {
+            overflow: hidden;
+        }
+
+        &Multiline {
+            overflow-y: auto;
+        }
+
+        // 偽類
+        &:focus {
+            box-shadow: none;
+        }
+
+        &::placeholder {
+            color: var(--cui-gray-500);
+            font-style: italic;
+        }
+    }
+
+    .messageInputSendBtn {
+        position: absolute;
+        right: 0.5rem;
+        bottom: 0.5rem;
+        border-radius: 100%;
+        outline: none;
+        border: none;
+        height: 40px;
+        width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+        cursor: pointer;
+        background-color: var(--cui-primary);
+        color: white;
+
+        // 偽類
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        &:active {
+            transform: translateY(0);
+        }
+
+        // SCSS 巢狀的 .noSend 樣式
+        &.noSend {
+            /* 不能點擊的樣式 */
+            pointer-events: none;
+        }
+    }
+}
+
+.messageInputError {
+    border-color: var(--cui-danger);
+}
+
+.errorMessage {
+    font-size: 0.75rem;
+    margin: 0;
+}

@@ -1,0 +1,48 @@
+@use 'base';
+@use 'chat';
+@use 'error';
+@use 'loading';
+@use 'markdown';
+@use 'message';
+@use 'buttons';
+
+/* Override Bootstrap and CoreUI CSS Variables */
+:root {
+    --header-background: #b479cd;
+
+    /* Bootstrap Variables */
+    --bs-primary: #9348e9;
+    --bs-primary-rgb: 147, 72, 233;
+
+    /* CoreUI Variables */
+    --cui-primary: #9348e9;
+    --cui-primary-rgb: 147, 72, 233;
+    --cui-primary-dark: #5219af;
+    --cui-primary-50: #faf5ff;
+    --cui-primary-100: #caacec;
+    --cui-primary-100-rgb: 202, 172, 236;
+    --cui-secondary: #6c757d;
+    --cui-secondary-rgb: 108, 117, 125;
+    --cui-success: #2eb85c;
+    --cui-success-rgb: 46, 184, 92;
+    --cui-info: #39f;
+    --cui-info-rgb: 51, 153, 255;
+    --cui-warning: #f9b115;
+    --cui-warning-rgb: 249, 177, 21;
+    --cui-danger: #e55353;
+    --cui-danger-rgb: 229, 83, 83;
+    --cui-light: #f8f9fa;
+    --cui-light-rgb: 248, 249, 250;
+    --cui-dark: #212529;
+    --cui-dark-rgb: 33, 37, 41;
+    --cui-gray-50: #f8f9fa;
+    --cui-gray-100: #f1f3f4;
+    --cui-gray-200: #d8dbe0;
+    --cui-gray-300: #c4c9d0;
+    --cui-gray-400: #a7aeb8;
+    --cui-gray-500: #8a93a0;
+    --cui-gray-600: #6c757d;
+    --cui-gray-700: #495057;
+    --cui-gray-800: #343a40;
+    --cui-gray-900: #212529;
+}
